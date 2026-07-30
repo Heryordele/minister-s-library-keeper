@@ -1,7 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookMarked, Loader2, Plus, Search } from "lucide-react";
+import {
+  BarcodeIcon,
+  BookMarked,
+  FileSpreadsheet,
+  Loader2,
+  PencilLine,
+  Plus,
+  Search,
+} from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { BookCover, LendingBadge, ReadingBadge } from "@/components/book-cover";
@@ -15,6 +23,14 @@ import {
 } from "@/lib/books";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -75,11 +91,7 @@ function LibraryPage() {
       <PageHeader
         title="Library"
         subtitle="Every volume in your collection."
-        actions={
-          <Button onClick={() => navigate({ to: "/books/new" })}>
-            <Plus className="mr-2 h-4 w-4" /> Add book
-          </Button>
-        }
+        actions={<AddBookMenu />}
       />
 
       <div className="mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-8">
@@ -92,11 +104,7 @@ function LibraryPage() {
             icon={<BookMarked className="h-6 w-6" />}
             title="No books yet"
             body="Start your vault by cataloguing the first volume on your shelf."
-            action={
-              <Button onClick={() => navigate({ to: "/books/new" })}>
-                <Plus className="mr-2 h-4 w-4" /> Add your first book
-              </Button>
-            }
+            action={<AddBookMenu label="Add your first book" />}
           />
         ) : (
           <>
@@ -183,5 +191,51 @@ function LibraryPage() {
         )}
       </div>
     </>
+  );
+}
+
+function AddBookMenu({ label = "Add book" }: { label?: string }) {
+  const navigate = useNavigate();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" /> {label}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel>How would you like to add books?</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={() => navigate({ to: "/books/new", search: {} })}
+        >
+          <PencilLine className="mr-2 h-4 w-4" />
+          <div>
+            <div className="font-medium">Enter manually</div>
+            <div className="text-xs text-muted-foreground">
+              Type in the details yourself
+            </div>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate({ to: "/books/scan" })}>
+          <BarcodeIcon className="mr-2 h-4 w-4" />
+          <div>
+            <div className="font-medium">Scan barcode</div>
+            <div className="text-xs text-muted-foreground">
+              Look up the ISBN with your camera
+            </div>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate({ to: "/books/import" })}>
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
+          <div>
+            <div className="font-medium">Bulk import</div>
+            <div className="text-xs text-muted-foreground">
+              Upload a CSV or Excel file
+            </div>
+          </div>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

@@ -9,6 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { booksKey } from "@/lib/books";
 
 export const Route = createFileRoute("/_authenticated/books/new")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    isbn: typeof search.isbn === "string" ? search.isbn : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Add a book — Minister's Vault" },
@@ -24,7 +27,9 @@ export const Route = createFileRoute("/_authenticated/books/new")({
 function NewBookPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { isbn } = Route.useSearch();
   const [error, setError] = useState<string | null>(null);
+
 
   const mutation = useMutation({
     mutationFn: async (values: BookFormValues) => {
@@ -61,7 +66,9 @@ function NewBookPage() {
       />
       <div className="mx-auto max-w-3xl px-4 py-8 md:px-8">
         <BookForm
+          book={isbn ? { isbn } : null}
           submitLabel="Save book"
+
           submitting={mutation.isPending}
           error={error}
           onSubmit={(v) => {

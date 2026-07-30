@@ -38,7 +38,7 @@ export type BookFormValues = {
 
 const NONE = "__none__";
 
-function initial(book?: Book | null): BookFormValues {
+function initial(book?: Partial<Book> | null): BookFormValues {
   return {
     title: book?.title ?? "",
     author: book?.author ?? null,
@@ -61,7 +61,7 @@ export function BookForm({
   onCancel,
   error,
 }: {
-  book?: Book | null;
+  book?: Partial<Book> | null;
   submitLabel: string;
   submitting: boolean;
   onSubmit: (values: BookFormValues) => void;
