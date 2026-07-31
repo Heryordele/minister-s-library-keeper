@@ -15,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { OnboardingGate } from "@/components/onboarding-gate";
+import { NotificationBell } from "@/components/notification-bell";
+
 
 const NAV = [
   { to: "/reading", label: "Reading", icon: Flame },
@@ -46,7 +48,7 @@ function DesktopSidebar() {
         <div className="grid h-9 w-9 place-items-center rounded-md bg-accent text-accent-foreground">
           <BookOpen className="h-5 w-5" />
         </div>
-        <div>
+        <div className="flex-1">
           <div className="font-serif text-base font-semibold leading-tight">
             Minister's Vault
           </div>
@@ -54,7 +56,9 @@ function DesktopSidebar() {
             Your library
           </div>
         </div>
+        <NotificationBell className="text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground" />
       </div>
+
       <nav className="flex-1 space-y-1 px-3">
         {NAV.map(({ to, label, icon: Icon }) => {
           const active = location.pathname.startsWith(to);
@@ -103,13 +107,17 @@ function MobileHeader() {
         </div>
         <span className="font-serif text-base font-semibold">Minister's Vault</span>
       </div>
-      <Link
-        to="/account"
-        className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground"
-        aria-label="Account"
-      >
-        <UserCircle className="h-5 w-5" />
-      </Link>
+      <div className="flex items-center gap-1">
+        <NotificationBell />
+        <Link
+          to="/account"
+          className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground"
+          aria-label="Account"
+        >
+          <UserCircle className="h-5 w-5" />
+        </Link>
+      </div>
+
     </header>
   );
 }
