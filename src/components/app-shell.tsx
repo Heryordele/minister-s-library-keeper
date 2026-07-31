@@ -15,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { OnboardingGate } from "@/components/onboarding-gate";
+import { NotificationBell } from "@/components/notification-bell";
+
 
 const NAV = [
   { to: "/reading", label: "Reading", icon: Flame },
