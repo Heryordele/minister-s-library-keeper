@@ -85,6 +85,29 @@ function BookDetailPage() {
       toast.error(e instanceof Error ? e.message : "Could not delete this book."),
   });
 
+  const { data: activeLoan } = useQuery({
+    queryKey: [...borrowRecordsKey, bookId],
+    queryFn: () => fetchActiveLoan(bookId),
+  });
+
+  const returnLoan = useMutation({
+    mutationFn: async () => {
+      if (!activeLoan) return;
+      await markReturned(activeLoan.id, bookId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: booksKey });
+      qc.invalidateQueries({ queryKey: borrowRecordsKey });
+      toast.success("Book marked as returned.");
+    },
+    onError: (e) =>
+      toast.error(
+        e instanceof Error ? e.message : "Could not mark this book returned.",
+      ),
+  });
+
+
+
   if (isLoading) {
     return (
       <div className="grid min-h-[60vh] place-items-center">
