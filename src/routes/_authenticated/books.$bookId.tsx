@@ -9,7 +9,16 @@ import { BookForm, type BookFormValues } from "@/components/book-form";
 import { LendingBadge, ReadingBadge } from "@/components/book-cover";
 import { supabase } from "@/integrations/supabase/client";
 import { booksKey, fetchBook } from "@/lib/books";
+import { LendBookDialog } from "@/components/lend-book-dialog";
+import {
+  borrowRecordsKey,
+  effectiveStatus,
+  fetchActiveLoan,
+  formatDate,
+  markReturned,
+} from "@/lib/lending";
 import { Button } from "@/components/ui/button";
+
 import {
   AlertDialog,
   AlertDialogAction,
