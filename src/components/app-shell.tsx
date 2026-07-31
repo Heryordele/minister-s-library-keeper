@@ -107,13 +107,17 @@ function MobileHeader() {
         </div>
         <span className="font-serif text-base font-semibold">Minister's Vault</span>
       </div>
-      <Link
-        to="/account"
-        className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground"
-        aria-label="Account"
-      >
-        <UserCircle className="h-5 w-5" />
-      </Link>
+      <div className="flex items-center gap-1">
+        <NotificationBell />
+        <Link
+          to="/account"
+          className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground"
+          aria-label="Account"
+        >
+          <UserCircle className="h-5 w-5" />
+        </Link>
+      </div>
+
     </header>
   );
 }
