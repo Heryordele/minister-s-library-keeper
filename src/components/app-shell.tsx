@@ -45,6 +45,7 @@ function DesktopSidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
       <div className="flex items-center gap-2 px-5 py-6">
+
         <div className="grid h-9 w-9 place-items-center rounded-md bg-accent text-accent-foreground">
           <BookOpen className="h-5 w-5" />
         </div>
