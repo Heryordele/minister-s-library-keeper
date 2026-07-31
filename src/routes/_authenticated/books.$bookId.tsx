@@ -138,7 +138,12 @@ function BookDetailPage() {
         title={book.title}
         subtitle={book.author ?? "Unknown author"}
         actions={
-          <AlertDialog>
+          <>
+            {!activeLoan && (
+              <LendBookDialog bookId={book.id} bookTitle={book.title} />
+            )}
+            <AlertDialog>
+
             <AlertDialogTrigger asChild>
               <Button variant="outline" size="sm">
                 <Trash2 className="mr-2 h-4 w-4" /> Delete
