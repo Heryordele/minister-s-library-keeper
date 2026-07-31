@@ -168,6 +168,7 @@ function BookDetailPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          </>
         }
       />
 
@@ -181,8 +182,46 @@ function BookDetailPage() {
             <ArrowLeft className="mr-2 h-4 w-4" /> Library
           </Button>
           <ReadingBadge status={book.reading_status} />
-          <LendingBadge status={book.lending_status} />
+          <LendingBadge
+            status={
+              activeLoan ? effectiveStatus(activeLoan) : book.lending_status
+            }
+          />
         </div>
+
+        {activeLoan && (
+          <div className="mb-6 rounded-lg border border-border bg-card p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-serif font-semibold">
+                  Lent to {activeLoan.borrower_name}
+                  {activeLoan.borrower_organization
+                    ? ` · ${activeLoan.borrower_organization}`
+                    : ""}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Borrowed {formatDate(activeLoan.date_borrowed)} · Due{" "}
+                  {formatDate(activeLoan.expected_return_date)}
+                  {activeLoan.borrower_phone
+                    ? ` · ${activeLoan.borrower_phone}`
+                    : ""}
+                  {activeLoan.borrower_email
+                    ? ` · ${activeLoan.borrower_email}`
+                    : ""}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={returnLoan.isPending}
+                onClick={() => returnLoan.mutate()}
+              >
+                Mark as returned
+              </Button>
+            </div>
+          </div>
+        )}
+
 
         <BookForm
           key={book.id}
