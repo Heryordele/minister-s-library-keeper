@@ -18,6 +18,12 @@ import {
   markReturned,
 } from "@/lib/lending";
 import { Button } from "@/components/ui/button";
+import { LogProgressDialog } from "@/components/log-progress-dialog";
+import {
+  computeBookStats,
+  fetchProgressForBook,
+  readingProgressKey,
+} from "@/lib/reading";
 
 import {
   AlertDialog,
