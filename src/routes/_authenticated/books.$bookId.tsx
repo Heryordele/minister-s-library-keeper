@@ -241,6 +241,51 @@ function BookDetailPage() {
           </div>
         )}
 
+        {isReading && stats.sessions > 0 && (
+          <div className="mb-6 rounded-lg border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-serif font-semibold">Reading progress</p>
+              <p className="text-sm text-muted-foreground">
+                Page {stats.currentPage}
+                {stats.totalPages ? ` of ${stats.totalPages}` : ""}
+              </p>
+            </div>
+            {stats.percentComplete != null && (
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-accent transition-all"
+                  style={{ width: `${stats.percentComplete}%` }}
+                />
+              </div>
+            )}
+            <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <Stat
+                label="Complete"
+                value={
+                  stats.percentComplete != null
+                    ? `${stats.percentComplete}%`
+                    : "—"
+                }
+              />
+              <Stat
+                label="Pages left"
+                value={
+                  stats.pagesRemaining != null ? `${stats.pagesRemaining}` : "—"
+                }
+              />
+              <Stat
+                label="Speed"
+                value={
+                  stats.pagesPerHour != null
+                    ? `${stats.pagesPerHour} pages/hr`
+                    : "—"
+                }
+              />
+              <Stat label="Sessions" value={`${stats.sessions}`} />
+            </dl>
+          </div>
+        )}
+
 
         <BookForm
           key={book.id}
