@@ -151,6 +151,13 @@ function BookDetailPage() {
         subtitle={book.author ?? "Unknown author"}
         actions={
           <>
+            {isReading && (
+              <LogProgressDialog
+                bookId={book.id}
+                bookTitle={book.title}
+                stats={stats}
+              />
+            )}
             {!activeLoan && (
               <LendBookDialog bookId={book.id} bookTitle={book.title} />
             )}
