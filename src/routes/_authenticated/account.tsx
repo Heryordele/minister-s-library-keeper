@@ -25,6 +25,10 @@ function AccountPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { data: streak } = useQuery({
+    queryKey: readingStreakKey,
+    queryFn: fetchStreak,
+  });
 
   useEffect(() => {
     (async () => {
