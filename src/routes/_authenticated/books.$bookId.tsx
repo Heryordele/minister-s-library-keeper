@@ -302,3 +302,14 @@ function BookDetailPage() {
     </>
   );
 }
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wider text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="mt-0.5 text-sm font-semibold">{value}</dd>
+    </div>
+  );
+}
