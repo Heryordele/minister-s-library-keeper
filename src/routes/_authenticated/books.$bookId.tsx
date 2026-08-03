@@ -18,6 +18,12 @@ import {
   markReturned,
 } from "@/lib/lending";
 import { Button } from "@/components/ui/button";
+import { LogProgressDialog } from "@/components/log-progress-dialog";
+import {
+  computeBookStats,
+  fetchProgressForBook,
+  readingProgressKey,
+} from "@/lib/reading";
 
 import {
   AlertDialog,
@@ -106,6 +112,12 @@ function BookDetailPage() {
       ),
   });
 
+  const { data: progressEntries } = useQuery({
+    queryKey: [...readingProgressKey, bookId],
+    queryFn: () => fetchProgressForBook(bookId),
+  });
+  const stats = computeBookStats(progressEntries ?? []);
+  const isReading = book?.reading_status === "reading";
 
 
   if (isLoading) {
@@ -139,6 +151,13 @@ function BookDetailPage() {
         subtitle={book.author ?? "Unknown author"}
         actions={
           <>
+            {isReading && (
+              <LogProgressDialog
+                bookId={book.id}
+                bookTitle={book.title}
+                stats={stats}
+              />
+            )}
             {!activeLoan && (
               <LendBookDialog bookId={book.id} bookTitle={book.title} />
             )}
@@ -222,6 +241,51 @@ function BookDetailPage() {
           </div>
         )}
 
+        {isReading && stats.sessions > 0 && (
+          <div className="mb-6 rounded-lg border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-serif font-semibold">Reading progress</p>
+              <p className="text-sm text-muted-foreground">
+                Page {stats.currentPage}
+                {stats.totalPages ? ` of ${stats.totalPages}` : ""}
+              </p>
+            </div>
+            {stats.percentComplete != null && (
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-accent transition-all"
+                  style={{ width: `${stats.percentComplete}%` }}
+                />
+              </div>
+            )}
+            <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <Stat
+                label="Complete"
+                value={
+                  stats.percentComplete != null
+                    ? `${stats.percentComplete}%`
+                    : "—"
+                }
+              />
+              <Stat
+                label="Pages left"
+                value={
+                  stats.pagesRemaining != null ? `${stats.pagesRemaining}` : "—"
+                }
+              />
+              <Stat
+                label="Speed"
+                value={
+                  stats.pagesPerHour != null
+                    ? `${stats.pagesPerHour} pages/hr`
+                    : "—"
+                }
+              />
+              <Stat label="Sessions" value={`${stats.sessions}`} />
+            </dl>
+          </div>
+        )}
+
 
         <BookForm
           key={book.id}
@@ -236,5 +300,16 @@ function BookDetailPage() {
         />
       </div>
     </>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wider text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="mt-0.5 text-sm font-semibold">{value}</dd>
+    </div>
   );
 }

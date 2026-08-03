@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2, Mail, UserCircle, ShieldCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { SignOutButton } from "@/components/app-shell";
+import { StreakBadges } from "@/components/streak-badges";
+import { fetchStreak, liveStreakDays, readingStreakKey } from "@/lib/reading";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/account")({
@@ -22,6 +25,10 @@ function AccountPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { data: streak } = useQuery({
+    queryKey: readingStreakKey,
+    queryFn: fetchStreak,
+  });
 
   useEffect(() => {
     (async () => {
@@ -95,6 +102,20 @@ function AccountPage() {
                 </Field>
               </div>
             </div>
+
+            <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+              <h2 className="text-base font-semibold">Reading discipline</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Current streak {liveStreakDays(streak ?? null)} days · longest{" "}
+                {streak?.longest_streak_days ?? 0} days.
+              </p>
+              <StreakBadges
+                longestStreak={streak?.longest_streak_days ?? 0}
+                className="mt-4"
+              />
+            </div>
+
+
 
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
               <h2 className="text-base font-semibold">Session</h2>
