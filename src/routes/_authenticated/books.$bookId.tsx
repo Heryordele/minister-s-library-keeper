@@ -112,6 +112,12 @@ function BookDetailPage() {
       ),
   });
 
+  const { data: progressEntries } = useQuery({
+    queryKey: [...readingProgressKey, bookId],
+    queryFn: () => fetchProgressForBook(bookId),
+  });
+  const stats = computeBookStats(progressEntries ?? []);
+  const isReading = book?.reading_status === "reading";
 
 
   if (isLoading) {
