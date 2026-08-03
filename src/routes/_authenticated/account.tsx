@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2, Mail, UserCircle, ShieldCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { SignOutButton } from "@/components/app-shell";
+import { StreakBadges } from "@/components/streak-badges";
+import { fetchStreak, liveStreakDays, readingStreakKey } from "@/lib/reading";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/account")({
