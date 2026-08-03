@@ -104,6 +104,20 @@ function AccountPage() {
             </div>
 
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+              <h2 className="text-base font-semibold">Reading discipline</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Current streak {liveStreakDays(streak ?? null)} days · longest{" "}
+                {streak?.longest_streak_days ?? 0} days.
+              </p>
+              <StreakBadges
+                longestStreak={streak?.longest_streak_days ?? 0}
+                className="mt-4"
+              />
+            </div>
+
+
+
+            <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
               <h2 className="text-base font-semibold">Session</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Sign out of this device.
