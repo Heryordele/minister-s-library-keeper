@@ -6,8 +6,15 @@ import { toast } from "sonner";
 
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { ReadingGoalDialog } from "@/components/reading-goal-dialog";
+import { StatCard } from "@/components/stat-card";
 import { StreakBadges } from "@/components/streak-badges";
 import { Button } from "@/components/ui/button";
+import { booksKey, categoriesKey, fetchBooks, fetchCategories } from "@/lib/books";
+import {
+  allProgressKey,
+  computeReadingDashboard,
+  fetchAllProgress,
+} from "@/lib/dashboard";
 import {
   deleteGoal,
   describeGoal,
@@ -17,6 +24,7 @@ import {
   readingGoalsKey,
   readingStreakKey,
 } from "@/lib/reading";
+
 
 export const Route = createFileRoute("/_authenticated/reading")({
   head: () => ({
