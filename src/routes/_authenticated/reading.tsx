@@ -57,6 +57,16 @@ function ReadingPage() {
     queryKey: readingStreakKey,
     queryFn: fetchStreak,
   });
+  const { data: books } = useQuery({ queryKey: booksKey, queryFn: fetchBooks });
+  const { data: categories } = useQuery({
+    queryKey: categoriesKey,
+    queryFn: fetchCategories,
+  });
+  const { data: progress } = useQuery({
+    queryKey: allProgressKey,
+    queryFn: fetchAllProgress,
+  });
+
 
   const remove = useMutation({
     mutationFn: (id: string) => deleteGoal(id),
