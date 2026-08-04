@@ -6,8 +6,15 @@ import { toast } from "sonner";
 
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { ReadingGoalDialog } from "@/components/reading-goal-dialog";
+import { StatCard } from "@/components/stat-card";
 import { StreakBadges } from "@/components/streak-badges";
 import { Button } from "@/components/ui/button";
+import { booksKey, categoriesKey, fetchBooks, fetchCategories } from "@/lib/books";
+import {
+  allProgressKey,
+  computeReadingDashboard,
+  fetchAllProgress,
+} from "@/lib/dashboard";
 import {
   deleteGoal,
   describeGoal,
@@ -17,6 +24,7 @@ import {
   readingGoalsKey,
   readingStreakKey,
 } from "@/lib/reading";
+
 
 export const Route = createFileRoute("/_authenticated/reading")({
   head: () => ({
@@ -49,6 +57,16 @@ function ReadingPage() {
     queryKey: readingStreakKey,
     queryFn: fetchStreak,
   });
+  const { data: books } = useQuery({ queryKey: booksKey, queryFn: fetchBooks });
+  const { data: categories } = useQuery({
+    queryKey: categoriesKey,
+    queryFn: fetchCategories,
+  });
+  const { data: progress } = useQuery({
+    queryKey: allProgressKey,
+    queryFn: fetchAllProgress,
+  });
+
 
   const remove = useMutation({
     mutationFn: (id: string) => deleteGoal(id),
@@ -62,16 +80,45 @@ function ReadingPage() {
 
   const current = liveStreakDays(streak ?? null);
   const longest = streak?.longest_streak_days ?? 0;
+  const dash = computeReadingDashboard(
+    books ?? [],
+    progress ?? [],
+    categories ?? [],
+  );
 
   return (
     <>
       <PageHeader
-        title="Reading"
+        title="Reading dashboard"
         subtitle="Your goals, streaks, and daily discipline."
         actions={<ReadingGoalDialog />}
       />
 
       <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 md:px-8">
+        <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          <StatCard label="Currently reading" value={dash.currentlyReading} />
+          <StatCard label="Books completed" value={dash.completed} />
+          <StatCard
+            label="Pages this month"
+            value={dash.pagesThisMonth}
+          />
+          <StatCard label="Hours this month" value={dash.hoursThisMonth} />
+          <StatCard
+            label="Current streak"
+            value={`${current} ${current === 1 ? "day" : "days"}`}
+          />
+          <StatCard
+            label="Most-read category"
+            value={
+              <span className="text-base">
+                {dash.mostReadCategory ?? "—"}
+              </span>
+            }
+            hint={dash.mostReadCategory ? undefined : "Log progress to see this"}
+          />
+        </section>
+
+
         <section className="rounded-lg border border-border bg-card p-6 shadow-sm">
           <div className="flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-3">
