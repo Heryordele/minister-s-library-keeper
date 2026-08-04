@@ -80,16 +80,45 @@ function ReadingPage() {
 
   const current = liveStreakDays(streak ?? null);
   const longest = streak?.longest_streak_days ?? 0;
+  const dash = computeReadingDashboard(
+    books ?? [],
+    progress ?? [],
+    categories ?? [],
+  );
 
   return (
     <>
       <PageHeader
-        title="Reading"
+        title="Reading dashboard"
         subtitle="Your goals, streaks, and daily discipline."
         actions={<ReadingGoalDialog />}
       />
 
       <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 md:px-8">
+        <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          <StatCard label="Currently reading" value={dash.currentlyReading} />
+          <StatCard label="Books completed" value={dash.completed} />
+          <StatCard
+            label="Pages this month"
+            value={dash.pagesThisMonth}
+          />
+          <StatCard label="Hours this month" value={dash.hoursThisMonth} />
+          <StatCard
+            label="Current streak"
+            value={`${current} ${current === 1 ? "day" : "days"}`}
+          />
+          <StatCard
+            label="Most-read category"
+            value={
+              <span className="text-base">
+                {dash.mostReadCategory ?? "—"}
+              </span>
+            }
+            hint={dash.mostReadCategory ? undefined : "Log progress to see this"}
+          />
+        </section>
+
+
         <section className="rounded-lg border border-border bg-card p-6 shadow-sm">
           <div className="flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-3">
