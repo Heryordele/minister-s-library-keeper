@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Undo2, Users } from "lucide-react";
+import { Loader2, PackageX, Undo2, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader, EmptyState } from "@/components/page-header";
@@ -13,6 +13,7 @@ import {
   effectiveStatus,
   fetchBorrowRecords,
   formatDate,
+  markLost,
   markReturned,
   syncOverdueBooks,
   type BorrowRecordWithBook,
@@ -80,6 +81,18 @@ function LendingPage() {
       toast.error(
         e instanceof Error ? e.message : "Could not mark this book returned.",
       ),
+  });
+
+  const reportLost = useMutation({
+    mutationFn: ({ id, bookId }: { id: string; bookId: string }) =>
+      markLost(bookId, id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: borrowRecordsKey });
+      qc.invalidateQueries({ queryKey: booksKey });
+      toast.success("Book marked as lost.");
+    },
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : "Could not mark this book lost."),
   });
 
   return (
@@ -150,16 +163,28 @@ function LendingPage() {
                           </p>
                         </div>
                         {key !== "returned" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={returnLoan.isPending}
-                            onClick={() =>
-                              returnLoan.mutate({ id: r.id, bookId: r.book_id })
-                            }
-                          >
-                            <Undo2 className="mr-2 h-4 w-4" /> Mark as returned
-                          </Button>
+                          <div className="flex shrink-0 flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={returnLoan.isPending}
+                              onClick={() =>
+                                returnLoan.mutate({ id: r.id, bookId: r.book_id })
+                              }
+                            >
+                              <Undo2 className="mr-2 h-4 w-4" /> Mark as returned
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={reportLost.isPending}
+                              onClick={() =>
+                                reportLost.mutate({ id: r.id, bookId: r.book_id })
+                              }
+                            >
+                              <PackageX className="mr-2 h-4 w-4" /> Mark as lost
+                            </Button>
+                          </div>
                         )}
                       </li>
                     ))}
