@@ -97,11 +97,12 @@ export function categoryPagesRead(
   const bookCategory = new Map(books.map((b) => [b.id, b.category_id]));
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
   const totals = new Map<string, number>();
+  const pages = pagesByEntry(progress);
 
   for (const entry of progress) {
     const categoryId = bookCategory.get(entry.book_id);
     const name = categoryId ? (categoryName.get(categoryId) ?? "Uncategorized") : "Uncategorized";
-    totals.set(name, (totals.get(name) ?? 0) + sessionPages(entry));
+    totals.set(name, (totals.get(name) ?? 0) + (pages.get(entry.id) ?? 0));
   }
 
   return [...totals.entries()]
@@ -153,10 +154,11 @@ export function readingGrowth(
       pages: 0,
     });
   }
+  const pages = pagesByEntry(progress);
   for (const entry of progress) {
     const key = monthKey(new Date(entry.logged_at));
     const bucket = buckets.find((b) => b.key === key);
-    if (bucket) bucket.pages += sessionPages(entry);
+    if (bucket) bucket.pages += pages.get(entry.id) ?? 0;
   }
   return buckets.map(({ month, pages }) => ({ month, pages }));
 }
