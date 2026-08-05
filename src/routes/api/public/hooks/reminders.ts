@@ -51,7 +51,7 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
         // --- Lending reminders -------------------------------------------
         const { data: loans, error: loansError } = await supabaseAdmin
           .from("borrow_records")
-          .select("owner_name:owner_id, borrower_name, expected_return_date, books(title)")
+          .select("owner_id, borrower_name, expected_return_date, books(title)")
           .eq("status", "borrowed")
           .not("expected_return_date", "is", null);
         if (loansError) {
@@ -59,7 +59,7 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
         }
 
         for (const loan of loans ?? []) {
-          const ownerId = (loan as { owner_name: string }).owner_name;
+          const ownerId = loan.owner_id;
           const due = startOfDay(loan.expected_return_date as string);
           const daysLeft = daysBetween(now, due);
           const title =
