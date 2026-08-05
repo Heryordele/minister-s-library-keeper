@@ -19,11 +19,33 @@ function monthKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-/** Pages read in a session = current_page - start_page (fallback: 0). */
-function sessionPages(entry: ReadingProgress): number {
-  const start = entry.start_page ?? 0;
-  const current = entry.current_page ?? 0;
-  return Math.max(0, current - start);
+/**
+ * Pages read per session. When `start_page` is missing we fall back to the
+ * previous session's `current_page` for the same book (and to 0 for the very
+ * first session), so sessions that only record a current page still count.
+ */
+function pagesByEntry(progress: ReadingProgress[]): Map<string, number> {
+  const byBook = new Map<string, ReadingProgress[]>();
+  for (const entry of progress) {
+    const list = byBook.get(entry.book_id) ?? [];
+    list.push(entry);
+    byBook.set(entry.book_id, list);
+  }
+
+  const pages = new Map<string, number>();
+  for (const entries of byBook.values()) {
+    const sorted = [...entries].sort(
+      (a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime(),
+    );
+    let previousPage = 0;
+    for (const entry of sorted) {
+      const current = entry.current_page ?? previousPage;
+      const start = entry.start_page ?? previousPage;
+      pages.set(entry.id, Math.max(0, current - start));
+      previousPage = Math.max(previousPage, current);
+    }
+  }
+  return pages;
 }
 
 export type ReadingDashboardStats = {
