@@ -101,6 +101,23 @@ export async function markReturned(recordId: string, bookId: string): Promise<vo
   if (bookError) throw bookError;
 }
 
+/** Marks a book (and its open loan, if any) as lost. */
+export async function markLost(bookId: string, recordId?: string | null): Promise<void> {
+  if (recordId) {
+    const { error } = await supabase
+      .from("borrow_records")
+      .update({ status: "lost" })
+      .eq("id", recordId);
+    if (error) throw error;
+  }
+
+  const { error: bookError } = await supabase
+    .from("books")
+    .update({ lending_status: "lost" })
+    .eq("id", bookId);
+  if (bookError) throw bookError;
+}
+
 /** Keep books whose loan has passed its due date flagged as overdue. */
 export async function syncOverdueBooks(records: BorrowRecordWithBook[]): Promise<void> {
   const overdueBookIds = records.filter(isOverdue).map((r) => r.book_id);

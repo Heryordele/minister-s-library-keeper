@@ -207,7 +207,7 @@ function AddBookMenu({ label = "Add book" }: { label?: string }) {
         <DropdownMenuLabel>How would you like to add books?</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onSelect={() => navigate({ to: "/books/new", search: {} })}
+          onSelect={() => navigate({ to: "/books/new", search: { isbn: undefined } })}
         >
           <PencilLine className="mr-2 h-4 w-4" />
           <div>

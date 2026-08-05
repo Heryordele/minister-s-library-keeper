@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, PackageX, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader, EmptyState } from "@/components/page-header";
@@ -15,6 +15,7 @@ import {
   effectiveStatus,
   fetchActiveLoan,
   formatDate,
+  markLost,
   markReturned,
 } from "@/lib/lending";
 import { Button } from "@/components/ui/button";
@@ -112,6 +113,33 @@ function BookDetailPage() {
       ),
   });
 
+  const lost = useMutation({
+    mutationFn: () => markLost(bookId, activeLoan?.id ?? null),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: booksKey });
+      qc.invalidateQueries({ queryKey: borrowRecordsKey });
+      toast.success("Book marked as lost.");
+    },
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : "Could not mark this book lost."),
+  });
+
+  const restore = useMutation({
+    mutationFn: async () => {
+      const { error: err } = await supabase
+        .from("books")
+        .update({ lending_status: "available" })
+        .eq("id", bookId);
+      if (err) throw err;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: booksKey });
+      toast.success("Book is back on the shelf.");
+    },
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : "Could not restore this book."),
+  });
+
   const { data: progressEntries } = useQuery({
     queryKey: [...readingProgressKey, bookId],
     queryFn: () => fetchProgressForBook(bookId),
@@ -158,8 +186,45 @@ function BookDetailPage() {
                 stats={stats}
               />
             )}
-            {!activeLoan && (
+            {!activeLoan && book.lending_status !== "lost" && (
               <LendBookDialog bookId={book.id} bookTitle={book.title} />
+            )}
+            {book.lending_status === "lost" ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={restore.isPending}
+                onClick={() => restore.mutate()}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" /> Found it
+              </Button>
+            ) : (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <PackageX className="mr-2 h-4 w-4" /> Mark as lost
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Mark “{book.title}” as lost?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      The book stays in your catalogue but is flagged as lost in
+                      your library analytics. You can restore it later if it
+                      turns up.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => lost.mutate()}
+                      disabled={lost.isPending}
+                    >
+                      Mark as lost
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
             <AlertDialog>
 
