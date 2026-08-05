@@ -62,11 +62,15 @@ export function computeReadingDashboard(
   categories: Category[],
 ): ReadingDashboardStats {
   const thisMonth = monthKey(new Date());
+  const pages = pagesByEntry(progress);
   const inMonth = progress.filter(
     (p) => monthKey(new Date(p.logged_at)) === thisMonth,
   );
 
-  const pagesThisMonth = inMonth.reduce((sum, p) => sum + sessionPages(p), 0);
+  const pagesThisMonth = inMonth.reduce(
+    (sum, p) => sum + (pages.get(p.id) ?? 0),
+    0,
+  );
   const minutesThisMonth = inMonth.reduce(
     (sum, p) => sum + (p.reading_time_minutes ?? 0),
     0,
