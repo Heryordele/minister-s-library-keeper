@@ -318,10 +318,61 @@ export function BookForm({
         </div>
       </section>
 
+      <section className="space-y-3 border-t border-border pt-6">
+        <Label>Purchase receipt</Label>
+        <input
+          id="receipt"
+          type="file"
+          accept="image/*,application/pdf"
+          className="hidden"
+          onChange={(e) => void handleReceipt(e.target.files?.[0])}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={receiptUploading}
+            onClick={() => document.getElementById("receipt")?.click()}
+          >
+            {receiptUploading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 h-4 w-4" />
+            )}
+            {values.receipt_url ? "Replace receipt" : "Upload receipt"}
+          </Button>
+          {values.receipt_url && receiptLink && (
+            <Button asChild variant="ghost" size="sm">
+              <a href={receiptLink} target="_blank" rel="noreferrer">
+                <FileText className="mr-2 h-4 w-4" /> View receipt
+              </a>
+            </Button>
+          )}
+          {values.receipt_url && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => set("receipt_url", null)}
+            >
+              <X className="mr-2 h-4 w-4" /> Remove
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          PDF or photo. Kept privately with this book for your records.
+        </p>
+        {receiptError && <p className="text-xs text-destructive">{receiptError}</p>}
+      </section>
+
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-wrap gap-2 border-t border-border pt-6">
-        <Button type="submit" disabled={submitting || uploading}>
+        <Button
+          type="submit"
+          disabled={submitting || uploading || receiptUploading}
+        >
           {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {submitLabel}
         </Button>
