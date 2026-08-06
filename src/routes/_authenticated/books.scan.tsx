@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 import { Camera, CameraOff, Loader2, Search } from "lucide-react";
@@ -10,6 +11,7 @@ import { PageHeader } from "@/components/page-header";
 import { BookForm, type BookFormValues } from "@/components/book-form";
 import { supabase } from "@/integrations/supabase/client";
 import { booksKey } from "@/lib/books";
+import { mirrorRemoteCover } from "@/lib/covers.functions";
 import {
   isValidIsbn,
   lookupIsbn,
@@ -44,16 +46,30 @@ function ScanPage() {
   const qc = useQueryClient();
   const [stage, setStage] = useState<Stage>({ kind: "scanning" });
   const [saveError, setSaveError] = useState<string | null>(null);
+  const mirrorCover = useServerFn(mirrorRemoteCover);
 
   const save = useMutation({
     mutationFn: async (values: BookFormValues) => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
       if (!userId) throw new Error("You must be signed in.");
+
+      // Copy externally-hosted cover art into our own storage so it can't vanish.
+      let cover = values.cover_image_url;
+      if (cover?.startsWith("http")) {
+        try {
+          const res = await mirrorCover({ data: { url: cover } });
+          cover = res.path;
+        } catch {
+          /* keep the remote URL if mirroring fails */
+        }
+      }
+
       const { data, error } = await supabase
         .from("books")
         .insert({
           ...values,
+          cover_image_url: cover,
           owner_id: userId,
           reading_status: "unread",
           lending_status: "available",
@@ -121,6 +137,7 @@ function ScanPage() {
               isbn: r.isbn,
               publisher: r.publisher,
               publication_year: r.publication_year,
+              description: r.description,
               cover_image_url: r.cover_image_url,
             }}
             submitLabel="Confirm and add to library"
