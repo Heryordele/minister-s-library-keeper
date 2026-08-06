@@ -1,18 +1,21 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Upload, X } from "lucide-react";
+import { FileText, Loader2, Upload, X } from "lucide-react";
 
 import {
   categoriesKey,
   fetchCategories,
   groupCategories,
+  signedReceiptUrl,
   uploadCover,
+  uploadReceipt,
   type Book,
 } from "@/lib/books";
 import { BookCover } from "@/components/book-cover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -31,7 +34,9 @@ export type BookFormValues = {
   publication_year: number | null;
   category_id: string | null;
   edition: string | null;
+  description: string | null;
   cover_image_url: string | null;
+  receipt_url: string | null;
   purchase_date: string | null;
   purchase_value: number | null;
 };
@@ -47,7 +52,9 @@ function initial(book?: Partial<Book> | null): BookFormValues {
     publication_year: book?.publication_year ?? null,
     category_id: book?.category_id ?? null,
     edition: book?.edition ?? null,
+    description: book?.description ?? null,
     cover_image_url: book?.cover_image_url ?? null,
+    receipt_url: book?.receipt_url ?? null,
     purchase_date: book?.purchase_date ?? null,
     purchase_value: book?.purchase_value ?? null,
   };
