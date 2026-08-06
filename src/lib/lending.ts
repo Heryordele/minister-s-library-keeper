@@ -128,3 +128,100 @@ export async function syncOverdueBooks(records: BorrowRecordWithBook[]): Promise
     .in("id", overdueBookIds)
     .eq("lending_status", "borrowed");
 }
+
+/* ----------------------------- borrower history ---------------------------- */
+
+export type BorrowerHistory = {
+  key: string;
+  name: string;
+  organization: string | null;
+  phone: string | null;
+  email: string | null;
+  records: BorrowRecordWithBook[];
+  outstanding: number;
+};
+
+/** Groups every loan ever made by the person who borrowed it. */
+export function groupByBorrower(
+  records: BorrowRecordWithBook[],
+): BorrowerHistory[] {
+  const map = new Map<string, BorrowerHistory>();
+  for (const r of records) {
+    const key = `${r.borrower_name.trim().toLowerCase()}|${(r.borrower_email ?? "").trim().toLowerCase()}`;
+    const existing = map.get(key);
+    if (existing) {
+      existing.records.push(r);
+      existing.organization ??= r.borrower_organization;
+      existing.phone ??= r.borrower_phone;
+      existing.email ??= r.borrower_email;
+    } else {
+      map.set(key, {
+        key,
+        name: r.borrower_name,
+        organization: r.borrower_organization,
+        phone: r.borrower_phone,
+        email: r.borrower_email,
+        records: [r],
+        outstanding: 0,
+      });
+    }
+  }
+  const list = [...map.values()];
+  for (const b of list) {
+    b.outstanding = b.records.filter((r) => r.status === "borrowed").length;
+  }
+  return list.sort(
+    (a, b) => b.outstanding - a.outstanding || a.name.localeCompare(b.name),
+  );
+}
+
+const CSV_HEADERS = [
+  "book_title",
+  "book_author",
+  "borrower_name",
+  "borrower_organization",
+  "borrower_phone",
+  "borrower_email",
+  "date_borrowed",
+  "expected_return_date",
+  "actual_return_date",
+  "status",
+] as const;
+
+function csvCell(value: string | null | undefined): string {
+  const v = value ?? "";
+  return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+}
+
+/** A full lending record set as CSV — a portable receipt of every loan. */
+export function borrowRecordsToCsv(records: BorrowRecordWithBook[]): string {
+  const rows = records.map((r) =>
+    [
+      r.books?.title ?? "",
+      r.books?.author ?? "",
+      r.borrower_name,
+      r.borrower_organization,
+      r.borrower_phone,
+      r.borrower_email,
+      r.date_borrowed,
+      r.expected_return_date,
+      r.actual_return_date,
+      effectiveStatus(r),
+    ]
+      .map(csvCell)
+      .join(","),
+  );
+  return [CSV_HEADERS.join(","), ...rows].join("\n");
+}
+
+export function downloadLendingCsv(records: BorrowRecordWithBook[]): void {
+  const blob = new Blob([borrowRecordsToCsv(records)], {
+    type: "text/csv;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `lending-records-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
