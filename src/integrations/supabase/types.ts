@@ -20,6 +20,7 @@ export type Database = {
           category_id: string | null
           cover_image_url: string | null
           created_at: string
+          description: string | null
           edition: string | null
           id: string
           isbn: string | null
@@ -30,6 +31,7 @@ export type Database = {
           purchase_date: string | null
           purchase_value: number | null
           reading_status: Database["public"]["Enums"]["reading_status"]
+          receipt_url: string | null
           title: string
           updated_at: string
         }
@@ -38,6 +40,7 @@ export type Database = {
           category_id?: string | null
           cover_image_url?: string | null
           created_at?: string
+          description?: string | null
           edition?: string | null
           id?: string
           isbn?: string | null
@@ -48,6 +51,7 @@ export type Database = {
           purchase_date?: string | null
           purchase_value?: number | null
           reading_status?: Database["public"]["Enums"]["reading_status"]
+          receipt_url?: string | null
           title: string
           updated_at?: string
         }
@@ -56,6 +60,7 @@ export type Database = {
           category_id?: string | null
           cover_image_url?: string | null
           created_at?: string
+          description?: string | null
           edition?: string | null
           id?: string
           isbn?: string | null
@@ -66,6 +71,7 @@ export type Database = {
           purchase_date?: string | null
           purchase_value?: number | null
           reading_status?: Database["public"]["Enums"]["reading_status"]
+          receipt_url?: string | null
           title?: string
           updated_at?: string
         }

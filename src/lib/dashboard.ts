@@ -24,7 +24,7 @@ function monthKey(d: Date): string {
  * previous session's `current_page` for the same book (and to 0 for the very
  * first session), so sessions that only record a current page still count.
  */
-function pagesByEntry(progress: ReadingProgress[]): Map<string, number> {
+export function pagesByEntry(progress: ReadingProgress[]): Map<string, number> {
   const byBook = new Map<string, ReadingProgress[]>();
   for (const entry of progress) {
     const list = byBook.get(entry.book_id) ?? [];
@@ -161,4 +161,92 @@ export function readingGrowth(
     if (bucket) bucket.pages += pages.get(entry.id) ?? 0;
   }
   return buckets.map(({ month, pages }) => ({ month, pages }));
+}
+
+/* ------------------------------ goal progress ------------------------------ */
+
+export type GoalPeriodName = "daily" | "weekly" | "monthly" | "quarterly" | "annual";
+
+/** The calendar window of the goal period that contains `now`. */
+export function goalPeriodWindow(
+  period: GoalPeriodName,
+  now = new Date(),
+): { start: Date; end: Date; label: string } {
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+
+  if (period === "daily") {
+    end.setDate(end.getDate() + 1);
+    return { start, end, label: "today" };
+  }
+  if (period === "weekly") {
+    const day = (start.getDay() + 6) % 7; // Monday-first
+    start.setDate(start.getDate() - day);
+    end.setTime(start.getTime());
+    end.setDate(end.getDate() + 7);
+    return { start, end, label: "this week" };
+  }
+  if (period === "monthly") {
+    start.setDate(1);
+    end.setTime(start.getTime());
+    end.setMonth(end.getMonth() + 1);
+    return { start, end, label: "this month" };
+  }
+  if (period === "quarterly") {
+    start.setMonth(Math.floor(start.getMonth() / 3) * 3, 1);
+    end.setTime(start.getTime());
+    end.setMonth(end.getMonth() + 3);
+    return { start, end, label: "this quarter" };
+  }
+  start.setMonth(0, 1);
+  end.setTime(start.getTime());
+  end.setFullYear(end.getFullYear() + 1);
+  return { start, end, label: "this year" };
+}
+
+export type GoalProgress = {
+  achieved: number;
+  target: number;
+  unit: "pages" | "books";
+  percent: number;
+  met: boolean;
+  periodLabel: string;
+  periodKey: string;
+};
+
+/** How far along the current period of a goal the user is. */
+export function computeGoalProgress(
+  goal: { period: GoalPeriodName; target_value: number; target_unit: "pages" | "books" },
+  progress: ReadingProgress[],
+  books: Book[],
+  now = new Date(),
+): GoalProgress {
+  const { start, end, label } = goalPeriodWindow(goal.period, now);
+  let achieved = 0;
+
+  if (goal.target_unit === "pages") {
+    const pages = pagesByEntry(progress);
+    for (const entry of progress) {
+      const at = new Date(entry.logged_at);
+      if (at >= start && at < end) achieved += pages.get(entry.id) ?? 0;
+    }
+  } else {
+    achieved = books.filter((b) => {
+      if (b.reading_status !== "completed") return false;
+      const at = new Date(b.updated_at);
+      return at >= start && at < end;
+    }).length;
+  }
+
+  const target = Math.max(1, goal.target_value);
+  return {
+    achieved,
+    target: goal.target_value,
+    unit: goal.target_unit,
+    percent: Math.min(100, Math.round((achieved / target) * 100)),
+    met: achieved >= goal.target_value,
+    periodLabel: label,
+    periodKey: start.toISOString().slice(0, 10),
+  };
 }

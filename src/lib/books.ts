@@ -68,6 +68,34 @@ export async function uploadCover(file: File): Promise<string> {
   return path;
 }
 
+/** Purchase receipts live in a private bucket keyed by `${userId}/${file}`. */
+export async function signedReceiptUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  const { data } = await supabase.storage
+    .from("receipts")
+    .createSignedUrl(path, 60 * 60);
+  return data?.signedUrl ?? null;
+}
+
+export async function uploadReceipt(file: File): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) throw new Error("You must be signed in to upload a receipt.");
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "pdf";
+  const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("receipts")
+    .upload(path, file, { upsert: false, contentType: file.type });
+  if (error) throw error;
+  return path;
+}
+
+export async function deleteBooks(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const { error } = await supabase.from("books").delete().in("id", ids);
+  if (error) throw error;
+}
+
 export function groupCategories(categories: Category[]) {
   const groups = new Map<string, Category[]>();
   for (const c of categories) {

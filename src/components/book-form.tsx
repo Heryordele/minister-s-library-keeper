@@ -1,18 +1,21 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Upload, X } from "lucide-react";
+import { FileText, Loader2, Upload, X } from "lucide-react";
 
 import {
   categoriesKey,
   fetchCategories,
   groupCategories,
+  signedReceiptUrl,
   uploadCover,
+  uploadReceipt,
   type Book,
 } from "@/lib/books";
 import { BookCover } from "@/components/book-cover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -31,7 +34,9 @@ export type BookFormValues = {
   publication_year: number | null;
   category_id: string | null;
   edition: string | null;
+  description: string | null;
   cover_image_url: string | null;
+  receipt_url: string | null;
   purchase_date: string | null;
   purchase_value: number | null;
 };
@@ -47,7 +52,9 @@ function initial(book?: Partial<Book> | null): BookFormValues {
     publication_year: book?.publication_year ?? null,
     category_id: book?.category_id ?? null,
     edition: book?.edition ?? null,
+    description: book?.description ?? null,
     cover_image_url: book?.cover_image_url ?? null,
+    receipt_url: book?.receipt_url ?? null,
     purchase_date: book?.purchase_date ?? null,
     purchase_value: book?.purchase_value ?? null,
   };
@@ -71,11 +78,30 @@ export function BookForm({
   const [values, setValues] = useState<BookFormValues>(() => initial(book));
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [receiptUploading, setReceiptUploading] = useState(false);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
+  const [receiptLink, setReceiptLink] = useState<string | null>(null);
 
   const { data: categories = [] } = useQuery({
     queryKey: categoriesKey,
     queryFn: fetchCategories,
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!values.receipt_url) {
+      setReceiptLink(null);
+      return;
+    }
+    signedReceiptUrl(values.receipt_url)
+      .then((url) => {
+        if (!cancelled) setReceiptLink(url);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [values.receipt_url]);
 
   function set<K extends keyof BookFormValues>(key: K, value: BookFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -92,6 +118,20 @@ export function BookForm({
       setUploadError(e instanceof Error ? e.message : "Upload failed.");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleReceipt(file: File | undefined) {
+    if (!file) return;
+    setReceiptError(null);
+    setReceiptUploading(true);
+    try {
+      const path = await uploadReceipt(file);
+      set("receipt_url", path);
+    } catch (e) {
+      setReceiptError(e instanceof Error ? e.message : "Upload failed.");
+    } finally {
+      setReceiptUploading(false);
     }
   }
 
@@ -212,7 +252,19 @@ export function BookForm({
             }
           />
         </Field>
+
+        <Field className="sm:col-span-2" id="description" label="Description">
+          <Textarea
+            id="description"
+            rows={4}
+            value={values.description ?? ""}
+            onChange={(e) => set("description", e.target.value || null)}
+            placeholder="A short summary, or what this book is for in your ministry."
+          />
+        </Field>
       </section>
+
+
 
       <section className="space-y-3 border-t border-border pt-6">
         <Label>Cover image</Label>
@@ -266,10 +318,61 @@ export function BookForm({
         </div>
       </section>
 
+      <section className="space-y-3 border-t border-border pt-6">
+        <Label>Purchase receipt</Label>
+        <input
+          id="receipt"
+          type="file"
+          accept="image/*,application/pdf"
+          className="hidden"
+          onChange={(e) => void handleReceipt(e.target.files?.[0])}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={receiptUploading}
+            onClick={() => document.getElementById("receipt")?.click()}
+          >
+            {receiptUploading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 h-4 w-4" />
+            )}
+            {values.receipt_url ? "Replace receipt" : "Upload receipt"}
+          </Button>
+          {values.receipt_url && receiptLink && (
+            <Button asChild variant="ghost" size="sm">
+              <a href={receiptLink} target="_blank" rel="noreferrer">
+                <FileText className="mr-2 h-4 w-4" /> View receipt
+              </a>
+            </Button>
+          )}
+          {values.receipt_url && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => set("receipt_url", null)}
+            >
+              <X className="mr-2 h-4 w-4" /> Remove
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          PDF or photo. Kept privately with this book for your records.
+        </p>
+        {receiptError && <p className="text-xs text-destructive">{receiptError}</p>}
+      </section>
+
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-wrap gap-2 border-t border-border pt-6">
-        <Button type="submit" disabled={submitting || uploading}>
+        <Button
+          type="submit"
+          disabled={submitting || uploading || receiptUploading}
+        >
           {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {submitLabel}
         </Button>

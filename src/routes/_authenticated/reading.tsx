@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Flame, Loader2, Pencil, Target, Trash2 } from "lucide-react";
+import { Flame, Loader2, PartyPopper, Pencil, Target, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader, EmptyState } from "@/components/page-header";
@@ -9,11 +9,19 @@ import { ReadingGoalDialog } from "@/components/reading-goal-dialog";
 import { StatCard } from "@/components/stat-card";
 import { StreakBadges } from "@/components/streak-badges";
 import { Button } from "@/components/ui/button";
-import { booksKey, categoriesKey, fetchBooks, fetchCategories } from "@/lib/books";
+import {
+  booksKey,
+  categoriesKey,
+  fetchBooks,
+  fetchCategories,
+  type Book as BookRow,
+} from "@/lib/books";
 import {
   allProgressKey,
+  computeGoalProgress,
   computeReadingDashboard,
   fetchAllProgress,
+  type GoalPeriodName,
 } from "@/lib/dashboard";
 import {
   deleteGoal,
@@ -23,6 +31,8 @@ import {
   liveStreakDays,
   readingGoalsKey,
   readingStreakKey,
+  type ReadingGoal,
+  type ReadingProgress as ReadingProgressRow,
 } from "@/lib/reading";
 
 
@@ -164,8 +174,9 @@ function ReadingPage() {
               {goals.map((goal) => (
                 <li
                   key={goal.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-4"
+                  className="rounded-lg border border-border bg-card p-4"
                 >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-serif text-base font-semibold capitalize">
                       {goal.period} goal
@@ -196,6 +207,12 @@ function ReadingPage() {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
+                  </div>
+                  <GoalProgressBar
+                    goal={goal}
+                    progress={progress ?? []}
+                    books={books ?? []}
+                  />
                 </li>
               ))}
             </ul>
@@ -203,5 +220,48 @@ function ReadingPage() {
         </section>
       </div>
     </>
+  );
+}
+
+function GoalProgressBar({
+  goal,
+  progress,
+  books,
+}: {
+  goal: ReadingGoal;
+  progress: ReadingProgressRow[];
+  books: BookRow[];
+}) {
+  const result = computeGoalProgress(
+    {
+      period: goal.period as GoalPeriodName,
+      target_value: goal.target_value,
+      target_unit: goal.target_unit as "pages" | "books",
+    },
+    progress,
+    books,
+  );
+
+  return (
+    <div className="mt-4">
+      <div className="mb-1.5 flex items-center justify-between text-xs">
+        <span className={result.met ? "font-medium text-accent" : "text-muted-foreground"}>
+          {result.met ? (
+            <span className="inline-flex items-center gap-1">
+              <PartyPopper className="h-3.5 w-3.5" /> Goal reached {result.periodLabel}!
+            </span>
+          ) : (
+            `${result.achieved} of ${result.target} ${result.unit} ${result.periodLabel}`
+          )}
+        </span>
+        <span className="text-muted-foreground">{result.percent}%</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-muted">
+        <div
+          className={result.met ? "h-full bg-accent" : "h-full bg-primary"}
+          style={{ width: `${result.percent}%` }}
+        />
+      </div>
+    </div>
   );
 }

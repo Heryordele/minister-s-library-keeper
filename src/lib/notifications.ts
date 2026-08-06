@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { computeGoalProgress, type GoalPeriodName } from "@/lib/dashboard";
 
 export type Notification = Tables<"notifications">;
 export type NotificationType = Notification["type"];
@@ -110,11 +111,36 @@ async function buildPending(userId: string): Promise<Pending[]> {
     }
   }
 
+  // --- Goal celebrations --------------------------------------------------
+  const { data: allGoals } = await supabase.from("reading_goals").select("*");
+
+  if (allGoals?.length) {
+    const { data: progressRows } = await supabase
+      .from("reading_progress")
+      .select("*")
+      .order("logged_at", { ascending: true });
+    const { data: bookRows } = await supabase.from("books").select("*");
+
+    for (const goal of allGoals) {
+      const result = computeGoalProgress(
+        {
+          period: goal.period as GoalPeriodName,
+          target_value: goal.target_value,
+          target_unit: goal.target_unit as "pages" | "books",
+        },
+        progressRows ?? [],
+        bookRows ?? [],
+      );
+      if (!result.met) continue;
+      pending.push({
+        type: "habit_nudge",
+        message: `Well done — you reached your goal of ${goal.target_value} ${goal.target_unit} ${result.periodLabel}. Faithfulness in small things builds a library-sized mind. (${result.periodKey})`,
+      });
+    }
+  }
+
   // --- Habit accountability nudges --------------------------------------
-  const { data: goals } = await supabase
-    .from("reading_goals")
-    .select("id")
-    .limit(1);
+  const goals = allGoals;
 
   if (goals?.length) {
     const { data: lastEntry } = await supabase
