@@ -252,7 +252,19 @@ export function BookForm({
             }
           />
         </Field>
+
+        <Field className="sm:col-span-2" id="description" label="Description">
+          <Textarea
+            id="description"
+            rows={4}
+            value={values.description ?? ""}
+            onChange={(e) => set("description", e.target.value || null)}
+            placeholder="A short summary, or what this book is for in your ministry."
+          />
+        </Field>
       </section>
+
+
 
       <section className="space-y-3 border-t border-border pt-6">
         <Label>Cover image</Label>
