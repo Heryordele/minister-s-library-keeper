@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Flame, Loader2, Pencil, Target, Trash2 } from "lucide-react";
+import { Flame, Loader2, PartyPopper, Pencil, Target, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader, EmptyState } from "@/components/page-header";
@@ -9,11 +9,19 @@ import { ReadingGoalDialog } from "@/components/reading-goal-dialog";
 import { StatCard } from "@/components/stat-card";
 import { StreakBadges } from "@/components/streak-badges";
 import { Button } from "@/components/ui/button";
-import { booksKey, categoriesKey, fetchBooks, fetchCategories } from "@/lib/books";
+import {
+  booksKey,
+  categoriesKey,
+  fetchBooks,
+  fetchCategories,
+  type Book as BookRow,
+} from "@/lib/books";
 import {
   allProgressKey,
+  computeGoalProgress,
   computeReadingDashboard,
   fetchAllProgress,
+  type GoalPeriodName,
 } from "@/lib/dashboard";
 import {
   deleteGoal,
@@ -23,6 +31,8 @@ import {
   liveStreakDays,
   readingGoalsKey,
   readingStreakKey,
+  type ReadingGoal,
+  type ReadingProgress as ReadingProgressRow,
 } from "@/lib/reading";
 
 
