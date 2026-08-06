@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, PackageX, Undo2, Users } from "lucide-react";
+import { Download, Loader2, PackageX, Undo2, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader, EmptyState } from "@/components/page-header";
@@ -10,9 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { booksKey } from "@/lib/books";
 import {
   borrowRecordsKey,
+  downloadLendingCsv,
   effectiveStatus,
   fetchBorrowRecords,
   formatDate,
+  groupByBorrower,
   markLost,
   markReturned,
   syncOverdueBooks,
@@ -68,6 +70,7 @@ function LendingPage() {
   }, [records]);
 
   const total = (records ?? []).length;
+  const borrowers = useMemo(() => groupByBorrower(records ?? []), [records]);
 
   const returnLoan = useMutation({
     mutationFn: ({ id, bookId }: { id: string; bookId: string }) =>
@@ -100,6 +103,17 @@ function LendingPage() {
       <PageHeader
         title="Lending"
         subtitle="Who has your books — and when they're due home."
+        actions={
+          total > 0 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => downloadLendingCsv(records ?? [])}
+            >
+              <Download className="mr-2 h-4 w-4" /> Export records
+            </Button>
+          ) : undefined
+        }
       />
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-8 md:py-10">
         {isLoading ? (
@@ -192,6 +206,59 @@ function LendingPage() {
                 )}
               </section>
             ))}
+
+            <section>
+              <div className="mb-3 flex items-center gap-2">
+                <h2 className="font-serif text-lg font-semibold">Borrowers</h2>
+                <Badge variant="secondary">{borrowers.length}</Badge>
+              </div>
+              <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+                {borrowers.map((b) => (
+                  <li key={b.key} className="p-4">
+                    <details>
+                      <summary className="flex cursor-pointer flex-wrap items-center gap-2">
+                        <span className="font-serif font-semibold">{b.name}</span>
+                        {b.organization && (
+                          <span className="text-sm text-muted-foreground">
+                            · {b.organization}
+                          </span>
+                        )}
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {b.records.length}{" "}
+                          {b.records.length === 1 ? "loan" : "loans"}
+                          {b.outstanding > 0 ? ` · ${b.outstanding} still out` : ""}
+                        </span>
+                      </summary>
+                      {(b.phone || b.email) && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {[b.phone, b.email].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                      <ul className="mt-3 space-y-2">
+                        {b.records.map((r) => (
+                          <li key={r.id} className="text-sm">
+                            <Link
+                              to="/books/$bookId"
+                              params={{ bookId: r.book_id }}
+                              className="hover:underline"
+                            >
+                              {r.books?.title ?? "Untitled book"}
+                            </Link>
+                            <span className="text-muted-foreground">
+                              {" "}
+                              — {formatDate(r.date_borrowed)} ·{" "}
+                              <span className="capitalize">
+                                {effectiveStatus(r)}
+                              </span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            </section>
           </div>
         )}
       </div>
