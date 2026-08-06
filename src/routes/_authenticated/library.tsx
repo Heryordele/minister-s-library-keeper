@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   BarcodeIcon,
   BookMarked,
@@ -9,6 +10,8 @@ import {
   PencilLine,
   Plus,
   Search,
+  Trash2,
+  X,
 } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/page-header";
@@ -17,12 +20,25 @@ import {
   booksKey,
   categoriesKey,
   fetchBooks,
+  deleteBooks,
   fetchCategories,
   groupCategories,
   READING_STATUSES,
 } from "@/lib/books";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,10 +74,11 @@ export const Route = createFileRoute("/_authenticated/library")({
 const ALL = "__all__";
 
 function LibraryPage() {
-  const navigate = useNavigate();
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(ALL);
   const [reading, setReading] = useState<string>(ALL);
+  const [selected, setSelected] = useState<string[]>([]);
 
   const { data: books, isLoading } = useQuery({
     queryKey: booksKey,
@@ -85,6 +102,29 @@ function LibraryPage() {
   }, [books, search, category, reading]);
 
   const hasBooks = (books?.length ?? 0) > 0;
+  const selectedSet = new Set(selected);
+
+  function toggle(id: string) {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  const removeMany = useMutation({
+    mutationFn: () => deleteBooks(selected),
+    onSuccess: () => {
+      const count = selected.length;
+      setSelected([]);
+      qc.invalidateQueries({ queryKey: booksKey });
+      toast.success(
+        `${count} ${count === 1 ? "book" : "books"} removed from your library.`,
+      );
+    },
+    onError: (e) =>
+      toast.error(
+        e instanceof Error ? e.message : "Could not remove those books.",
+      ),
+  });
 
   return (
     <>
@@ -154,6 +194,60 @@ function LibraryPage() {
               </Select>
             </div>
 
+            {selected.length > 0 && (
+              <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-accent/40 bg-accent/10 px-4 py-3">
+                <p className="text-sm font-medium">
+                  {selected.length} selected
+                </p>
+                <div className="ml-auto flex flex-wrap gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setSelected(filtered.map((b) => b.id))
+                    }
+                  >
+                    Select all shown
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelected([])}
+                  >
+                    <X className="mr-2 h-4 w-4" /> Clear
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Delete {selected.length}{" "}
+                          {selected.length === 1 ? "book" : "books"}?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This permanently removes the selected books and their
+                          records from your library. This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep books</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => removeMany.mutate()}
+                          disabled={removeMany.isPending}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            )}
+
             {filtered.length === 0 ? (
               <EmptyState
                 icon={<Search className="h-6 w-6" />}
@@ -163,7 +257,18 @@ function LibraryPage() {
             ) : (
               <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                 {filtered.map((b) => (
-                  <li key={b.id}>
+                  <li key={b.id} className="relative">
+                    <div
+                      className="absolute left-5 top-5 z-10"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <Checkbox
+                        checked={selectedSet.has(b.id)}
+                        onCheckedChange={() => toggle(b.id)}
+                        aria-label={`Select ${b.title}`}
+                        className="border-border bg-background/90 shadow-sm"
+                      />
+                    </div>
                     <Link
                       to="/books/$bookId"
                       params={{ bookId: b.id }}
