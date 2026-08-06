@@ -78,11 +78,30 @@ export function BookForm({
   const [values, setValues] = useState<BookFormValues>(() => initial(book));
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [receiptUploading, setReceiptUploading] = useState(false);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
+  const [receiptLink, setReceiptLink] = useState<string | null>(null);
 
   const { data: categories = [] } = useQuery({
     queryKey: categoriesKey,
     queryFn: fetchCategories,
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!values.receipt_url) {
+      setReceiptLink(null);
+      return;
+    }
+    signedReceiptUrl(values.receipt_url)
+      .then((url) => {
+        if (!cancelled) setReceiptLink(url);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [values.receipt_url]);
 
   function set<K extends keyof BookFormValues>(key: K, value: BookFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -99,6 +118,20 @@ export function BookForm({
       setUploadError(e instanceof Error ? e.message : "Upload failed.");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleReceipt(file: File | undefined) {
+    if (!file) return;
+    setReceiptError(null);
+    setReceiptUploading(true);
+    try {
+      const path = await uploadReceipt(file);
+      set("receipt_url", path);
+    } catch (e) {
+      setReceiptError(e instanceof Error ? e.message : "Upload failed.");
+    } finally {
+      setReceiptUploading(false);
     }
   }
 
