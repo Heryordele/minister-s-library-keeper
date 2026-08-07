@@ -143,6 +143,7 @@ function SignInForm() {
 }
 
 function SignUpForm() {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -151,7 +152,7 @@ function SignUpForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -161,8 +162,14 @@ function SignUpForm() {
     });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("Account created — check your email to confirm.");
+    if (data.session) {
+      toast.success("Welcome — your vault is ready.");
+      navigate({ to: "/reading", replace: true });
+      return;
+    }
+    toast.success("Account created — you can sign in now.");
   }
+
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
