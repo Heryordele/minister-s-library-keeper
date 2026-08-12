@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
-import { Camera, CameraOff, Loader2, Search } from "lucide-react";
+import { Camera, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/page-header";
@@ -169,121 +169,90 @@ function ScanPage() {
 }
 
 function Scanner({ onDetected }: { onDetected: (isbn: string) => void }) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const detectedRef = useRef(false);
-  const [active, setActive] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [reading, setReading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!active) return;
-    let stopped = false;
-    let controls: { stop: () => void } | undefined;
-    let stream: MediaStream | undefined;
-    detectedRef.current = false;
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
-    const hints = new Map();
-    hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-      BarcodeFormat.EAN_13,
-      BarcodeFormat.EAN_8,
-      BarcodeFormat.UPC_A,
-      BarcodeFormat.UPC_E,
-      BarcodeFormat.CODE_128,
-      BarcodeFormat.ITF,
-    ]);
-    hints.set(DecodeHintType.TRY_HARDER, true);
-    const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 120 });
-
-    function handleText(raw: string) {
-      const text = normaliseIsbn(raw);
-      if (!isValidIsbn(text) || detectedRef.current) return;
-      detectedRef.current = true;
-      stopped = true;
-      controls?.stop();
-      stream?.getTracks().forEach((t) => t.stop());
-      setActive(false);
-      onDetected(text);
-    }
-
-    async function start() {
-      setStatus("Requesting camera…");
-      // Ask for the rear camera explicitly — the default device is often the
-      // selfie camera, which can never see the back-cover barcode.
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
-      if (stopped) {
-        stream.getTracks().forEach((t) => t.stop());
+  async function handleFile(file: File) {
+    setError(null);
+    const url = URL.createObjectURL(file);
+    setPreview((old) => {
+      if (old) URL.revokeObjectURL(old);
+      return url;
+    });
+    setReading(true);
+    try {
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.ITF,
+      ]);
+      hints.set(DecodeHintType.TRY_HARDER, true);
+      const reader = new BrowserMultiFormatReader(hints);
+      const result = await reader.decodeFromImageUrl(url);
+      const text = normaliseIsbn(result.getText());
+      if (!isValidIsbn(text)) {
+        setError("That barcode isn't an ISBN. Try again or type it below.");
         return;
       }
-      const video = videoRef.current;
-      if (!video) throw new Error("Video element unavailable.");
-      video.srcObject = stream;
-      video.setAttribute("playsinline", "true");
-      await video.play().catch(() => undefined);
-      setStatus("Hold the barcode steady inside the frame…");
-      controls = await reader.decodeFromVideoElement(video, (result) => {
-        if (stopped || !result) return;
-        handleText(result.getText());
-      });
-      if (stopped) controls.stop();
-    }
-
-    start().catch((e: unknown) => {
-      stream?.getTracks().forEach((t) => t.stop());
-      setActive(false);
-      setStatus(null);
-      const msg = e instanceof Error ? e.message : String(e);
+      onDetected(text);
+    } catch {
       setError(
-        /denied|NotAllowed/i.test(msg)
-          ? "Camera access was blocked. Allow camera permission in your browser settings, then try again — or type the ISBN below."
-          : `Camera unavailable: ${msg}. You can type the ISBN below instead.`,
+        "Couldn't read the barcode. Get closer, keep it flat and well lit, then snap again — or type the ISBN below.",
       );
-    });
-
-    return () => {
-      stopped = true;
-      controls?.stop();
-      stream?.getTracks().forEach((t) => t.stop());
-      const video = videoRef.current;
-      if (video) video.srcObject = null;
-    };
-  }, [active, onDetected]);
+    } finally {
+      setReading(false);
+    }
+  }
 
   return (
     <section className="space-y-3">
       <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-border bg-muted">
-        <video
-          ref={videoRef}
-          className="h-full w-full object-cover"
-          muted
-          autoPlay
-          playsInline
-        />
-        {active && (
-          <div className="pointer-events-none absolute inset-x-8 top-1/2 h-24 -translate-y-1/2 rounded-md border-2 border-primary/70" />
-        )}
-        {!active && (
-          <div className="absolute inset-0 grid place-items-center bg-muted text-center text-sm text-muted-foreground">
+        {preview ? (
+          <img src={preview} alt="Captured barcode" className="h-full w-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 grid place-items-center text-center text-sm text-muted-foreground">
             <div className="space-y-3 px-6">
-              <CameraOff className="mx-auto h-7 w-7" />
-              <p>Camera is off. Start the scanner when you're ready.</p>
+              <Camera className="mx-auto h-7 w-7" />
+              <p>Snap a clear photo of the ISBN barcode on the back cover.</p>
             </div>
           </div>
         )}
+        {reading && (
+          <div className="absolute inset-0 grid place-items-center bg-background/70">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
       </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (file) void handleFile(file);
+        }}
+      />
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => setActive((a) => !a)} variant={active ? "outline" : "default"}>
+        <Button onClick={() => inputRef.current?.click()} disabled={reading}>
           <Camera className="mr-2 h-4 w-4" />
-          {active ? "Stop camera" : "Start camera"}
+          {reading ? "Reading barcode…" : preview ? "Capture again" : "Capture barcode"}
         </Button>
       </div>
-      {active && status && <p className="text-sm text-muted-foreground">{status}</p>}
       {error && <p className="text-sm text-destructive">{error}</p>}
     </section>
   );
