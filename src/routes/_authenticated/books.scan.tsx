@@ -170,13 +170,17 @@ function ScanPage() {
 
 function Scanner({ onDetected }: { onDetected: (isbn: string) => void }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const detectedRef = useRef(false);
   const [active, setActive] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!active) return;
     let stopped = false;
     let controls: { stop: () => void } | undefined;
+    let stream: MediaStream | undefined;
+    detectedRef.current = false;
 
     const hints = new Map();
     hints.set(DecodeHintType.POSSIBLE_FORMATS, [
@@ -185,35 +189,69 @@ function Scanner({ onDetected }: { onDetected: (isbn: string) => void }) {
       BarcodeFormat.UPC_A,
       BarcodeFormat.UPC_E,
       BarcodeFormat.CODE_128,
+      BarcodeFormat.ITF,
     ]);
-    const reader = new BrowserMultiFormatReader(hints);
+    hints.set(DecodeHintType.TRY_HARDER, true);
+    const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 120 });
 
-    reader
-      .decodeFromVideoDevice(undefined, videoRef.current ?? undefined, (result) => {
-        if (stopped || !result) return;
-        const text = normaliseIsbn(result.getText());
-        if (!isValidIsbn(text)) return;
-        stopped = true;
-        controls?.stop();
-        setActive(false);
-        onDetected(text);
-      })
-      .then((c) => {
-        controls = c;
-        if (stopped) c.stop();
-      })
-      .catch((e: unknown) => {
-        setActive(false);
-        setError(
-          e instanceof Error
-            ? `Camera unavailable: ${e.message}`
-            : "Camera unavailable on this device.",
-        );
+    function handleText(raw: string) {
+      const text = normaliseIsbn(raw);
+      if (!isValidIsbn(text) || detectedRef.current) return;
+      detectedRef.current = true;
+      stopped = true;
+      controls?.stop();
+      stream?.getTracks().forEach((t) => t.stop());
+      setActive(false);
+      onDetected(text);
+    }
+
+    async function start() {
+      setStatus("Requesting camera…");
+      // Ask for the rear camera explicitly — the default device is often the
+      // selfie camera, which can never see the back-cover barcode.
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
       });
+      if (stopped) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      const video = videoRef.current;
+      if (!video) throw new Error("Video element unavailable.");
+      video.srcObject = stream;
+      video.setAttribute("playsinline", "true");
+      await video.play().catch(() => undefined);
+      setStatus("Hold the barcode steady inside the frame…");
+      controls = await reader.decodeFromVideoElement(video, (result) => {
+        if (stopped || !result) return;
+        handleText(result.getText());
+      });
+      if (stopped) controls.stop();
+    }
+
+    start().catch((e: unknown) => {
+      stream?.getTracks().forEach((t) => t.stop());
+      setActive(false);
+      setStatus(null);
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(
+        /denied|NotAllowed/i.test(msg)
+          ? "Camera access was blocked. Allow camera permission in your browser settings, then try again — or type the ISBN below."
+          : `Camera unavailable: ${msg}. You can type the ISBN below instead.`,
+      );
+    });
 
     return () => {
       stopped = true;
       controls?.stop();
+      stream?.getTracks().forEach((t) => t.stop());
+      const video = videoRef.current;
+      if (video) video.srcObject = null;
     };
   }, [active, onDetected]);
 
@@ -224,8 +262,12 @@ function Scanner({ onDetected }: { onDetected: (isbn: string) => void }) {
           ref={videoRef}
           className="h-full w-full object-cover"
           muted
+          autoPlay
           playsInline
         />
+        {active && (
+          <div className="pointer-events-none absolute inset-x-8 top-1/2 h-24 -translate-y-1/2 rounded-md border-2 border-primary/70" />
+        )}
         {!active && (
           <div className="absolute inset-0 grid place-items-center bg-muted text-center text-sm text-muted-foreground">
             <div className="space-y-3 px-6">
@@ -241,6 +283,7 @@ function Scanner({ onDetected }: { onDetected: (isbn: string) => void }) {
           {active ? "Stop camera" : "Start camera"}
         </Button>
       </div>
+      {active && status && <p className="text-sm text-muted-foreground">{status}</p>}
       {error && <p className="text-sm text-destructive">{error}</p>}
     </section>
   );
