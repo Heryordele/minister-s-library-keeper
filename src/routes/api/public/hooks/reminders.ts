@@ -21,6 +21,12 @@ function daysBetween(from: Date, to: Date): number {
   return Math.round((to.getTime() - from.getTime()) / DAY_MS);
 }
 
+const SUBJECT_BY_TYPE: Record<Pending["type"], string> = {
+  lending_reminder: "A book is due back soon — Minister's Vault",
+  overdue: "A borrowed book is overdue — Minister's Vault",
+  habit_nudge: "Your library is waiting — Minister's Vault",
+};
+
 /**
  * Scheduled reminder sweep. Runs server-side so lending reminders and habit
  * nudges are generated even when a user has not opened the app.
@@ -40,9 +46,7 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { supabaseAdmin } = await import(
-          "@/integrations/supabase/client.server"
-        );
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
         const now = startOfDay(new Date());
         const stamp = now.toISOString().slice(0, 10);
@@ -62,8 +66,7 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
           const ownerId = loan.owner_id;
           const due = startOfDay(loan.expected_return_date as string);
           const daysLeft = daysBetween(now, due);
-          const title =
-            (loan.books as { title: string } | null)?.title ?? "A book";
+          const title = (loan.books as { title: string } | null)?.title ?? "A book";
           const dueLabel = due.toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
@@ -87,9 +90,7 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
         }
 
         // --- Habit nudges --------------------------------------------------
-        const { data: goals } = await supabaseAdmin
-          .from("reading_goals")
-          .select("user_id");
+        const { data: goals } = await supabaseAdmin.from("reading_goals").select("user_id");
         const goalUsers = [...new Set((goals ?? []).map((g) => g.user_id))];
 
         if (goalUsers.length > 0) {
@@ -139,30 +140,59 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
           .from("notifications")
           .select("user_id, message")
           .in("user_id", [...new Set(pending.map((p) => p.user_id))]);
-        const seen = new Set(
-          (existing ?? []).map((e) => `${e.user_id}::${e.message}`),
+        const seen = new Set((existing ?? []).map((e) => `${e.user_id}::${e.message}`));
+
+        const fresh = pending.filter((p) => !seen.has(`${p.user_id}::${p.message}`));
+        if (fresh.length === 0) {
+          return Response.json({ success: true, created: 0, emailed: 0 });
+        }
+
+        // Look up each recipient's email once before sending.
+        const { data: profiles } = await supabaseAdmin
+          .from("profiles")
+          .select("id, email")
+          .in("id", [...new Set(fresh.map((p) => p.user_id))]);
+        const emailByUser = new Map(
+          (profiles ?? [])
+            .filter((p): p is { id: string; email: string } => !!p.email)
+            .map((p) => [p.id, p.email]),
         );
 
-        const rows = pending
-          .filter((p) => !seen.has(`${p.user_id}::${p.message}`))
-          .map((p) => ({
-            user_id: p.user_id,
-            type: p.type,
-            channel: "push" as const,
-            message: p.message,
-            sent_at: new Date().toISOString(),
-          }));
-
-        if (rows.length === 0) {
-          return Response.json({ success: true, created: 0 });
-        }
+        const { sendReminderEmail } = await import("@/lib/email.server");
+        let emailed = 0;
+        const rows = await Promise.all(
+          fresh.map(async (p) => {
+            const to = emailByUser.get(p.user_id);
+            let channel: "email" | "push" = "push";
+            if (to) {
+              const result = await sendReminderEmail({
+                to,
+                subject: SUBJECT_BY_TYPE[p.type],
+                message: p.message,
+              });
+              if (result.sent) {
+                channel = "email";
+                emailed += 1;
+              }
+              // A send failure still records the in-app notification below —
+              // the user isn't left with no record of the reminder at all.
+            }
+            return {
+              user_id: p.user_id,
+              type: p.type,
+              channel,
+              message: p.message,
+              sent_at: new Date().toISOString(),
+            };
+          }),
+        );
 
         const { error } = await supabaseAdmin.from("notifications").insert(rows);
         if (error) {
           return Response.json({ error: error.message }, { status: 500 });
         }
 
-        return Response.json({ success: true, created: rows.length });
+        return Response.json({ success: true, created: rows.length, emailed });
       },
     },
   },
