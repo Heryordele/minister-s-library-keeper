@@ -94,6 +94,41 @@
   --sidebar-ring: oklch(0.72 0.13 72);
 }
 
+/*
+ * Landing page only — "The Minister's Card Catalog" direction.
+ * Scoped under .mv-catalog so the rest of the app (Operate surfaces)
+ * keeps its Fraunces/Inter tokens untouched.
+ */
+.mv-catalog {
+  --catalog-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --catalog-mono: "Courier Prime", "Courier New", monospace;
+}
+.mv-catalog .font-catalog-serif {
+  font-family: var(--catalog-serif);
+}
+.mv-catalog .font-catalog-mono {
+  font-family: var(--catalog-mono);
+}
+
+@keyframes mv-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) rotate(-0.6deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(-0.6deg);
+  }
+}
+.mv-catalog .mv-card-reveal {
+  animation: mv-card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mv-catalog .mv-card-reveal {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
