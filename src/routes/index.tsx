@@ -95,8 +95,8 @@ function Landing() {
       </header>
 
       <main>
-        {/* First viewport — the master catalog card */}
-        <section className="relative overflow-hidden bg-primary px-6 pb-24 pt-16 md:pt-24">
+        {/* First viewport — the master catalog card, pulled from a drawer of them */}
+        <section className="relative overflow-hidden bg-primary px-6 pb-16 pt-10 md:pb-20 md:pt-14">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 opacity-[0.05]"
@@ -105,8 +105,26 @@ function Landing() {
                 "repeating-linear-gradient(0deg, var(--color-accent) 0px, var(--color-accent) 1px, transparent 1px, transparent 28px)",
             }}
           />
-          <div className="relative mx-auto max-w-3xl">
-            <div className="mv-card-reveal relative rounded-sm border border-border bg-card px-7 py-8 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.55)] sm:px-10 sm:py-10">
+          {/* Drawer rail — instant graphic anchor before any text registers */}
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-accent/0 via-accent to-accent/0"
+          />
+
+          <div className="relative mx-auto max-w-4xl pt-6">
+            {/* Ghost cards — a drawer full, not one slip alone */}
+            <div
+              aria-hidden
+              className="absolute inset-x-4 top-6 hidden rotate-[3deg] rounded-sm border border-accent/25 bg-card/40 sm:block"
+              style={{ height: "calc(100% - 24px)" }}
+            />
+            <div
+              aria-hidden
+              className="absolute inset-x-2 top-3 hidden -rotate-[2deg] rounded-sm border border-accent/35 bg-card/70 sm:block"
+              style={{ height: "calc(100% - 12px)" }}
+            />
+
+            <div className="mv-card-reveal relative rounded-sm border border-border bg-card px-7 py-9 shadow-[0_32px_80px_-16px_rgba(0,0,0,0.65)] sm:px-12 sm:py-12">
               <div
                 aria-hidden
                 className="absolute left-6 top-6 h-2.5 w-2.5 rounded-full border border-border bg-background sm:left-8"
@@ -122,15 +140,15 @@ function Landing() {
                 </span>
               </div>
 
-              <h1 className="font-catalog-serif mt-6 pl-6 text-4xl font-semibold leading-[1.08] tracking-tight sm:pl-8 sm:text-5xl">
+              <h1 className="font-catalog-serif mt-7 pl-6 text-5xl font-semibold leading-[1.03] tracking-tight sm:pl-8 sm:text-6xl md:text-7xl">
                 Preserving Knowledge.
                 <br />
-                Building Discipline.
+                <span className="text-accent-foreground/90">Building Discipline.</span>
                 <br />
                 Protecting Legacy.
               </h1>
 
-              <ol className="mt-6 space-y-1.5 border-t border-border/70 pl-6 pt-5 text-sm text-muted-foreground sm:pl-8">
+              <ol className="mt-8 space-y-2 border-t border-border/70 pl-6 pt-6 text-base text-muted-foreground sm:pl-8">
                 <li>
                   <span className="font-catalog-mono mr-2 text-accent-foreground/70">1.</span>
                   Cataloging — organized by a classification built for ministry, not generic tags.
@@ -145,11 +163,11 @@ function Landing() {
                 </li>
               </ol>
 
-              <div className="mt-8 flex flex-wrap items-center gap-4 border-t border-border/70 pl-6 pt-6 sm:pl-8">
+              <div className="mt-9 flex flex-wrap items-center gap-4 border-t border-border/70 pl-6 pt-7 sm:pl-8">
                 <Button
                   asChild
                   size="lg"
-                  className="font-catalog-mono relative -rotate-2 rounded-none border-2 border-accent bg-transparent px-6 text-accent-foreground shadow-none hover:bg-accent/10"
+                  className="font-catalog-mono relative -rotate-2 rounded-none border-2 border-accent bg-transparent px-7 py-6 text-base text-accent-foreground shadow-none hover:bg-accent/10"
                 >
                   <Link to="/auth" search={{ mode: "signup" }}>
                     Request your card
