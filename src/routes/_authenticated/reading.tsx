@@ -112,31 +112,31 @@ function ReadingPage() {
 
       {hasNoLibrary ? (
         <div className="mx-auto max-w-2xl px-4 py-8 md:px-8">
-          <section className="scholar-card">
-            <div className="grid h-11 w-11 place-items-center bg-accent/15 text-accent">
+          <section className="rounded-lg border border-border bg-card p-6 sm:p-8">
+            <div className="grid h-11 w-11 place-items-center rounded-full bg-accent/15 text-accent">
               <BookMarked className="h-5 w-5" />
             </div>
-            <h2 className="headline-lg mt-6">
+            <h2 className="font-serif mt-4 text-xl font-semibold">
               Your vault is empty — let's add your first book.
             </h2>
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-muted-foreground">
               Everything here — reading goals, streaks, lending — starts once your library has at
               least one book in it. Catalog one now, however is fastest for you.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="default">
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild size="lg">
                 <Link to="/books/scan">
                   <Camera className="mr-2 h-4 w-4" />
                   Scan a barcode
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg">
+              <Button asChild variant="outline">
                 <Link to="/books/new" search={{ isbn: undefined }}>
                   Add manually
                 </Link>
               </Button>
-              <Button asChild variant="ghost" size="lg">
+              <Button asChild variant="ghost">
                 <Link to="/books/import">
                   <Upload className="mr-2 h-4 w-4" />
                   Import a list
@@ -146,48 +146,48 @@ function ReadingPage() {
           </section>
         </div>
       ) : (
-        <div className="mx-auto max-w-6xl space-y-10 px-4 py-8 md:px-8">
-          <section className=”grid grid-cols-2 gap-4 md:grid-cols-3”>
-            <StatCard label=”Books in library” value={books?.length ?? 0} />
-            <StatCard label=”Currently reading” value={dash.currentlyReading} />
-            <StatCard label=”Books completed” value={dash.completed} />
-            <StatCard label=”Pages this month” value={dash.pagesThisMonth} />
-            <StatCard label=”Hours this month” value={dash.hoursThisMonth} />
+        <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 md:px-8">
+          <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            <StatCard label="Books in library" value={books?.length ?? 0} />
+            <StatCard label="Currently reading" value={dash.currentlyReading} />
+            <StatCard label="Books completed" value={dash.completed} />
+            <StatCard label="Pages this month" value={dash.pagesThisMonth} />
+            <StatCard label="Hours this month" value={dash.hoursThisMonth} />
             <StatCard
-              label=”Most-read category”
-              value={<span className=”text-base”>{dash.mostReadCategory ?? “—“}</span>}
-              hint={dash.mostReadCategory ? undefined : “Log progress to see this”}
+              label="Most-read category"
+              value={<span className="text-base">{dash.mostReadCategory ?? "—"}</span>}
+              hint={dash.mostReadCategory ? undefined : "Log progress to see this"}
             />
           </section>
 
-          <section className=”scholar-card”>
-            <div className=”flex flex-wrap items-center gap-8”>
-              <div className=”flex items-center gap-4”>
-                <div className=”grid h-14 w-14 place-items-center bg-accent/15 text-accent”>
-                  <Flame className=”h-7 w-7” />
+          <section className="rounded-lg border border-border bg-card p-6 shadow-sm">
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-3">
+                <div className="grid h-12 w-12 place-items-center rounded-full bg-accent/15 text-accent">
+                  <Flame className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className=”display-md text-accent”>{current}</div>
-                  <div className=”label-sm uppercase text-muted-foreground”>
-                    Current streak (days)
+                  <div className="text-2xl font-semibold">{current} days</div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Current streak
                   </div>
                 </div>
               </div>
               <div>
-                <div className=”display-md”>{longest}</div>
-                <div className=”label-sm uppercase text-muted-foreground”>
-                  Longest streak (days)
+                <div className="text-2xl font-semibold">{longest} days</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Longest streak
                 </div>
               </div>
             </div>
-            <p className=”mt-6 text-sm text-muted-foreground”>
+            <p className="mt-4 text-sm text-muted-foreground">
               Log progress from any book marked “reading” to keep your streak alive.
             </p>
-            <StreakBadges longestStreak={longest} className=”mt-6” />
+            <StreakBadges longestStreak={longest} className="mt-5" />
           </section>
 
           <section>
-            <h2 className=”headline-lg mb-6”>Reading goals</h2>
+            <h2 className="mb-3 text-lg font-semibold">Reading goals</h2>
             {isLoading ? (
               <div className="grid place-items-center py-12">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -200,15 +200,15 @@ function ReadingPage() {
                 action={<ReadingGoalDialog />}
               />
             ) : (
-              <ul className="space-y-4">
+              <ul className="space-y-3">
                 {goals.map((goal) => (
-                  <li key={goal.id} className="scholar-card">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <p className="headline-md capitalize font-display">
+                  <li key={goal.id} className="rounded-lg border border-border bg-card p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="font-serif text-base font-semibold capitalize">
                           {goal.period} goal
                         </p>
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="mt-0.5 text-sm text-muted-foreground">
                           {describeGoal(goal)} · since{" "}
                           {new Date(`${goal.start_date}T00:00:00`).toLocaleDateString(undefined, {
                             year: "numeric",

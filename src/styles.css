@@ -308,3 +308,49 @@
     font-weight: 500;
   }
 }
+
+/* Responsive typography: Scale display and headline sizes on mobile */
+@media (max-width: 639px) {
+  .display-lg {
+    font-size: 2rem;
+  }
+
+  .display-md {
+    font-size: 1.5rem;
+  }
+
+  .headline-lg {
+    font-size: 1.25rem;
+  }
+
+  .headline-md {
+    font-size: 1.125rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  /* Touch target sizing: Ensure buttons meet 44px minimum on mobile */
+  button {
+    min-height: 44px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="url"],
+  input[type="number"],
+  textarea {
+    min-height: 44px;
+  }
+}
