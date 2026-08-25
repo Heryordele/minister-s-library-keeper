@@ -64,7 +64,7 @@ function NewBookPage() {
         title="Add a book"
         subtitle="Manual entry — only the title is required."
       />
-      <div className="mx-auto max-w-3xl px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-2xl px-4 py-8 md:px-8">
         <BookForm
           book={isbn ? { isbn } : null}
           submitLabel="Save book"

@@ -122,7 +122,7 @@ function ImportPage() {
         subtitle="Upload a CSV or Excel file to catalogue many books at once."
       />
 
-      <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-2xl space-y-8 px-4 py-8 md:px-8">
         <section className="rounded-lg border border-border bg-card p-5">
           <h2 className="font-serif text-lg font-semibold">Template columns</h2>
           <p className="mt-1 text-sm text-muted-foreground">

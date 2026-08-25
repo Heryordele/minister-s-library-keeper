@@ -158,7 +158,7 @@ function BookDetailPage() {
 
   if (!book) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 md:px-8">
+      <div className="mx-auto max-w-2xl px-4 py-16 md:px-8">
         <EmptyState
           title="Book not found"
           body="This book may have been deleted or does not belong to your library."
@@ -256,7 +256,7 @@ function BookDetailPage() {
         }
       />
 
-      <div className="mx-auto max-w-3xl px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-2xl px-4 py-8 md:px-8">
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <Button
             variant="ghost"

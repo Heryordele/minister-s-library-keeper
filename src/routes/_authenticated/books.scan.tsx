@@ -119,7 +119,7 @@ function ScanPage() {
           title="Confirm book details"
           subtitle={`Found via ${r.source}. Check or edit anything before saving.`}
         />
-        <div className="mx-auto max-w-3xl px-4 py-8 md:px-8">
+        <div className="mx-auto max-w-2xl px-4 py-8 md:px-8">
           {r.description && (
             <div className="mb-8 rounded-lg border border-border bg-card p-4">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
