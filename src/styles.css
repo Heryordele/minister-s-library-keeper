@@ -15,11 +15,16 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-serif: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", serif;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
+  /* Scholar's Professional typography for app surfaces */
+  --font-display: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-body-serif: "Source Serif 4", ui-serif, Georgia, "Times New Roman", serif;
+  --font-label: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-sm: 0.125rem;
+  --radius: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -49,45 +54,73 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Scholar's Professional semantic tokens */
+  --color-surface: var(--background);
+  --color-surface-dim: #cfdaf1;
+  --color-surface-container: #e7eeff;
+  --color-surface-container-high: #dee8ff;
+  --color-on-surface: var(--foreground);
+  --color-on-surface-variant: #44474d;
+  --color-outline: #75777e;
+  --color-outline-variant: #c5c6ce;
+  --color-success: #2e7d32;
+  --color-warning: #f57c00;
+  --color-error: var(--destructive);
+
+  /* Layout tokens */
+  --sidebar-width: 280px;
+  --container-max-width: 1440px;
+  --gutter: 32px;
+  --stack-sm: 8px;
+  --stack-md: 16px;
+  --stack-lg: 32px;
+  --stack-xl: 64px;
 }
 
-:root {
-  --radius: 0.5rem;
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Serif+4:wght@400;600&family=Hanken+Grotesk:wght@500;600;700&display=swap");
 
-  /* Parchment off-white */
+:root {
+  --radius: 0.25rem;
+
+  /* Scholar's Professional: Soft white background, off-white surfaces */
   --background: oklch(0.975 0.012 85);
-  --foreground: oklch(0.22 0.03 260);
+  --foreground: oklch(0.111 0.024 260);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.03 260);
+  --card-foreground: oklch(0.111 0.024 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.03 260);
+  --popover-foreground: oklch(0.111 0.024 260);
 
-  /* Deep navy */
-  --primary: oklch(0.26 0.045 260);
-  --primary-foreground: oklch(0.975 0.012 85);
+  /* Deep Navy: primary for navigation, headings, core structure */
+  --primary: oklch(0.0476 0.047 260);
+  --primary-foreground: oklch(1 0 0);
 
+  /* Tiered surface system */
   --secondary: oklch(0.94 0.015 80);
-  --secondary-foreground: oklch(0.26 0.045 260);
+  --secondary-foreground: oklch(0.0476 0.047 260);
 
   --muted: oklch(0.945 0.014 80);
   --muted-foreground: oklch(0.48 0.025 260);
 
-  /* Warm gold / bronze accent */
+  /* Gold Bronze: sophisticated accent, applied sparingly */
   --accent: oklch(0.72 0.13 72);
-  --accent-foreground: oklch(0.22 0.03 260);
+  --accent-foreground: oklch(0.111 0.024 260);
 
+  /* Status colors */
   --destructive: oklch(0.55 0.2 27);
   --destructive-foreground: oklch(0.98 0.005 85);
 
+  /* Borders: muted navy-grey for low-elevation cards */
   --border: oklch(0.88 0.02 80);
   --input: oklch(0.9 0.018 80);
   --ring: oklch(0.72 0.13 72);
 
-  --sidebar: oklch(0.24 0.04 260);
+  /* Sidebar: institutional navigation, Deep Navy background */
+  --sidebar: oklch(0.0476 0.047 260);
   --sidebar-foreground: oklch(0.94 0.012 85);
   --sidebar-primary: oklch(0.72 0.13 72);
-  --sidebar-primary-foreground: oklch(0.22 0.03 260);
+  --sidebar-primary-foreground: oklch(0.111 0.024 260);
   --sidebar-accent: oklch(0.3 0.04 260);
   --sidebar-accent-foreground: oklch(0.98 0.008 85);
   --sidebar-border: oklch(0.32 0.03 260);
@@ -110,6 +143,96 @@
   font-family: var(--catalog-mono);
 }
 
+/* Scholar's Professional: Utility classes for typography scale */
+@layer components {
+  .display-lg {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .display-md {
+    font-family: var(--font-display);
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .headline-lg {
+    font-family: var(--font-display);
+    font-size: 1.875rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .headline-md {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .body-lg {
+    font-family: var(--font-body-serif);
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  .body-md {
+    font-family: var(--font-body-serif);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  /* Scholar's Professional: Card component patterns */
+  .scholar-card {
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem;
+  }
+
+  .scholar-card-header {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--color-foreground);
+    margin-bottom: 1rem;
+  }
+
+  /* Scholar's Professional: Data table patterns */
+  .scholar-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .scholar-table thead {
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+
+  .scholar-table thead th {
+    font-family: var(--font-label);
+    font-weight: 700;
+    text-align: left;
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .scholar-table tbody tr:hover {
+    background-color: #faf7f0;
+  }
+
+  .scholar-table tbody td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+/* Landing page: "The Minister's Card Catalog" animation */
 @keyframes mv-card-in {
   from {
     opacity: 0;
@@ -141,9 +264,47 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Scholar's Professional: Playfair Display for editorial prestige in headings */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-serif);
-    font-feature-settings: "ss01", "ss02";
-    letter-spacing: -0.01em;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  h2 {
+    font-size: 2rem;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    line-height: 1.3;
+    font-weight: 600;
+  }
+
+  h4 {
+    font-size: 1.25rem;
+    line-height: 1.3;
+    font-weight: 600;
+  }
+
+  /* Labels: Hanken Grotesk for metadata, UI control labels */
+  label, .label, .label-md, .label-sm {
+    font-family: var(--font-label);
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+  }
+
+  .label-sm {
+    font-size: 0.75rem;
+    font-weight: 500;
   }
 }

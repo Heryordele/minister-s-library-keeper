@@ -43,23 +43,23 @@ export function AppShell({ children }: { children: ReactNode }) {
 function DesktopSidebar() {
   const location = useLocation();
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
-      <div className="flex items-center gap-2 px-5 py-6">
-        <div className="grid h-9 w-9 place-items-center rounded-md bg-accent text-accent-foreground">
+    <aside className="sticky top-0 hidden h-screen shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex" style={{ width: '280px' }}>
+      <div className="flex items-center gap-3 px-6 py-8">
+        <div className="grid h-10 w-10 place-items-center bg-accent text-accent-foreground">
           <BookOpen className="h-5 w-5" />
         </div>
         <div className="flex-1">
-          <div className="font-serif text-base font-semibold leading-tight">
+          <div className="font-display text-base font-semibold leading-tight text-sidebar-foreground">
             Minister's Vault
           </div>
-          <div className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">
+          <div className="label-sm mt-1 text-sidebar-foreground/60">
             Your library
           </div>
         </div>
-        <NotificationBell className="text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground" />
+        <NotificationBell className="text-sidebar-foreground/70 hover:text-sidebar-foreground" />
       </div>
 
-      <nav className="flex-1 space-y-1 px-3">
+      <nav className="flex-1 space-y-2 px-4 py-6">
         {NAV.map(({ to, label, icon: Icon }) => {
           const active = location.pathname.startsWith(to);
           return (
@@ -67,32 +67,34 @@ function DesktopSidebar() {
               key={to}
               to={to}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all",
+                "border-l-2",
                 active
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+                  ? "border-l-accent bg-sidebar-accent/20 text-accent"
+                  : "border-l-transparent text-sidebar-foreground/80 hover:text-sidebar-foreground",
               )}
             >
-              <Icon className="h-4 w-4" />
-              {label}
+              <Icon className="h-5 w-5" />
+              <span className="font-label">{label}</span>
             </Link>
           );
         })}
       </nav>
-      <div className="border-t border-sidebar-border p-3">
+
+      <div className="border-t border-sidebar-border space-y-2 p-4">
         <Link
           to="/account"
           className={cn(
-            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            "flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all border-l-2",
             location.pathname === "/account"
-              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-              : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+              ? "border-l-accent bg-sidebar-accent/20 text-accent"
+              : "border-l-transparent text-sidebar-foreground/80 hover:text-sidebar-foreground",
           )}
         >
-          <UserCircle className="h-4 w-4" />
-          Account
+          <UserCircle className="h-5 w-5" />
+          <span className="font-label">Account</span>
         </Link>
-        <SignOutButton className="mt-1 w-full justify-start text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground" />
+        <SignOutButton className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground border-l-2 border-l-transparent px-3 py-2.5 text-sm font-label" />
       </div>
     </aside>
   );
@@ -100,24 +102,23 @@ function DesktopSidebar() {
 
 function MobileHeader() {
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
-      <div className="flex items-center gap-2">
-        <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">
-          <BookOpen className="h-4 w-4" />
+    <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-primary/5 px-4 py-4 md:hidden">
+      <div className="flex items-center gap-3">
+        <div className="grid h-9 w-9 place-items-center bg-primary text-primary-foreground">
+          <BookOpen className="h-5 w-5" />
         </div>
-        <span className="font-serif text-base font-semibold">Minister's Vault</span>
+        <span className="font-display text-base font-semibold text-foreground">Minister's Vault</span>
       </div>
       <div className="flex items-center gap-1">
         <NotificationBell />
         <Link
           to="/account"
-          className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground"
+          className="grid h-9 w-9 place-items-center border border-border text-muted-foreground rounded-full"
           aria-label="Account"
         >
           <UserCircle className="h-5 w-5" />
         </Link>
       </div>
-
     </header>
   );
 }
