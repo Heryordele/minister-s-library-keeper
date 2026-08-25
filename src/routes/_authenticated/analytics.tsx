@@ -95,7 +95,7 @@ function AnalyticsPage() {
         subtitle="Reading pace, categories, and your library at a glance."
       />
 
-      <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 md:px-8">
         {isLoading ? (
           <div className="grid place-items-center py-16">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />

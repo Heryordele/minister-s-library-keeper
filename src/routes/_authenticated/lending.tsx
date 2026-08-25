@@ -115,7 +115,7 @@ function LendingPage() {
           ) : undefined
         }
       />
-      <div className="mx-auto max-w-5xl px-4 py-8 md:px-8 md:py-10">
+      <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 md:px-8">
         {isLoading ? (
           <div className="grid place-items-center py-20">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />

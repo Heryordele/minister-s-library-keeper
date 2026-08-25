@@ -62,7 +62,7 @@ function AccountPage() {
   return (
     <>
       <PageHeader title="Account" subtitle="Your profile and plan." />
-      <div className="mx-auto max-w-3xl px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 md:px-8">
         {loading || !profile ? (
           <div className="grid place-items-center py-16">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
