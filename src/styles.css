@@ -2,6 +2,8 @@
 @source "../src";
 @import "tw-animate-css";
 
+/* Google Fonts loaded via HTML head preload in __root.tsx */
+
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -77,8 +79,6 @@
   --stack-lg: 32px;
   --stack-xl: 64px;
 }
-
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Serif+4:wght@400;600&family=Hanken+Grotesk:wght@500;600;700&display=swap");
 
 :root {
   --radius: 0.25rem;

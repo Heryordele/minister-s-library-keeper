@@ -19,6 +19,7 @@ import { PageHeader, EmptyState } from "@/components/page-header";
 import { ReadingGoalDialog } from "@/components/reading-goal-dialog";
 import { StatCard } from "@/components/stat-card";
 import { StreakBadges } from "@/components/streak-badges";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
   booksKey,
@@ -148,16 +149,29 @@ function ReadingPage() {
       ) : (
         <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 md:px-8">
           <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            <StatCard label="Books in library" value={books?.length ?? 0} />
-            <StatCard label="Currently reading" value={dash.currentlyReading} />
-            <StatCard label="Books completed" value={dash.completed} />
-            <StatCard label="Pages this month" value={dash.pagesThisMonth} />
-            <StatCard label="Hours this month" value={dash.hoursThisMonth} />
-            <StatCard
-              label="Most-read category"
-              value={<span className="text-base">{dash.mostReadCategory ?? "—"}</span>}
-              hint={dash.mostReadCategory ? undefined : "Log progress to see this"}
-            />
+            {booksLoading ? (
+              <>
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+              </>
+            ) : (
+              <>
+                <StatCard label="Books in library" value={books?.length ?? 0} />
+                <StatCard label="Currently reading" value={dash.currentlyReading} />
+                <StatCard label="Books completed" value={dash.completed} />
+                <StatCard label="Pages this month" value={dash.pagesThisMonth} />
+                <StatCard label="Hours this month" value={dash.hoursThisMonth} />
+                <StatCard
+                  label="Most-read category"
+                  value={<span className="text-base">{dash.mostReadCategory ?? "—"}</span>}
+                  hint={dash.mostReadCategory ? undefined : "Log progress to see this"}
+                />
+              </>
+            )}
           </section>
 
           <section className="rounded-lg border border-border bg-card p-6 shadow-sm">

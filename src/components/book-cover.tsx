@@ -42,6 +42,7 @@ export function BookCover({
           src={url}
           alt={`Cover of ${title}`}
           loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover"
         />
       ) : (

@@ -9,6 +9,19 @@ export type LookupResult = {
   source: "Google Books" | "Open Library";
 };
 
+const FETCH_TIMEOUT_MS = 5000; // 5 second timeout for API calls
+
+/** Fetch with timeout */
+async function fetchWithTimeout(url: string, timeoutMs = FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export function normaliseIsbn(raw: string): string {
   return raw.replace(/[^0-9Xx]/g, "").toUpperCase();
 }
@@ -19,7 +32,7 @@ export function isValidIsbn(isbn: string): boolean {
 }
 
 async function fromGoogleBooks(isbn: string): Promise<LookupResult | null> {
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}`,
   );
   if (!res.ok) return null;
@@ -44,7 +57,7 @@ async function fromGoogleBooks(isbn: string): Promise<LookupResult | null> {
 }
 
 async function fromOpenLibrary(isbn: string): Promise<LookupResult | null> {
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://openlibrary.org/api/books?bibkeys=ISBN:${encodeURIComponent(isbn)}&format=json&jscmd=data`,
   );
   if (!res.ok) return null;
