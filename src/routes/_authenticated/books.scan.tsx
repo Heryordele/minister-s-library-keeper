@@ -190,26 +190,29 @@ function Scanner({ onDetected }: { onDetected: (isbn: string) => void }) {
     setReading(true);
     try {
       const hints = new Map();
+      // Prioritize ISBN barcode formats (EAN-13, EAN-8, UPC-A)
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [
         BarcodeFormat.EAN_13,
-        BarcodeFormat.EAN_8,
         BarcodeFormat.UPC_A,
+        BarcodeFormat.EAN_8,
         BarcodeFormat.UPC_E,
         BarcodeFormat.CODE_128,
         BarcodeFormat.ITF,
       ]);
       hints.set(DecodeHintType.TRY_HARDER, true);
+      hints.set(DecodeHintType.PURE_BARCODE, false);
+
       const reader = new BrowserMultiFormatReader(hints);
       const result = await reader.decodeFromImageUrl(url);
       const text = normaliseIsbn(result.getText());
       if (!isValidIsbn(text)) {
-        setError("That barcode isn't an ISBN. Try again or type it below.");
+        setError("Barcode detected but isn't valid ISBN. Type it manually below.");
         return;
       }
       onDetected(text);
     } catch {
       setError(
-        "Couldn't read the barcode. Get closer, keep it flat and well lit, then snap again — or type the ISBN below.",
+        "Barcode not detected. Tips: ensure it's flat, well-lit, and in focus. Or type the ISBN below.",
       );
     } finally {
       setReading(false);
