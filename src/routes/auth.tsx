@@ -158,6 +158,7 @@ function SignUpForm() {
       options: {
         emailRedirectTo: window.location.origin,
         data: { name },
+        autoConfirmUser: true,
       },
     });
     setLoading(false);
