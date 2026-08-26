@@ -154,6 +154,12 @@ function ScanPage() {
     );
   }
 
+  const isbnSectionRef = useRef<HTMLDivElement>(null);
+
+  const scrollToIsbn = () => {
+    isbnSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <>
       <PageHeader
@@ -161,14 +167,16 @@ function ScanPage() {
         subtitle="Point your camera at the ISBN barcode on the back cover."
       />
       <div className="mx-auto max-w-xl space-y-8 px-4 py-8 md:px-8">
-        <Scanner onDetected={(isbn) => void handleIsbn(isbn)} />
-        <ManualIsbn onSubmit={(isbn) => void handleIsbn(isbn)} />
+        <Scanner onDetected={(isbn) => void handleIsbn(isbn)} onScanFailed={scrollToIsbn} />
+        <div ref={isbnSectionRef}>
+          <ManualIsbn onSubmit={(isbn) => void handleIsbn(isbn)} />
+        </div>
       </div>
     </>
   );
 }
 
-function Scanner({ onDetected }: { onDetected: (isbn: string) => void }) {
+function Scanner({ onDetected, onScanFailed }: { onDetected: (isbn: string) => void; onScanFailed: () => void }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
@@ -256,7 +264,20 @@ function Scanner({ onDetected }: { onDetected: (isbn: string) => void }) {
           {reading ? "Reading barcode…" : preview ? "Capture again" : "Capture barcode"}
         </Button>
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && (
+        <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <p className="text-sm text-destructive font-medium">{error}</p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onScanFailed}
+            className="w-full"
+          >
+            Type ISBN instead
+          </Button>
+        </div>
+      )}
     </section>
   );
 }
@@ -265,29 +286,40 @@ function ManualIsbn({ onSubmit }: { onSubmit: (isbn: string) => void }) {
   const [value, setValue] = useState("");
   const valid = isValidIsbn(value);
   return (
-    <form
-      className="space-y-2 border-t border-border pt-6"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (valid) onSubmit(value);
-      }}
-    >
-      <Label htmlFor="isbn-lookup">Or type the ISBN</Label>
-      <div className="flex gap-2">
-        <Input
-          id="isbn-lookup"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="9780830816507"
-          inputMode="numeric"
-        />
-        <Button type="submit" disabled={!valid} variant="secondary">
-          <Search className="mr-2 h-4 w-4" /> Look up
-        </Button>
+    <section className="space-y-4 rounded-lg border border-border bg-card p-6">
+      <div>
+        <h2 className="text-lg font-semibold">Enter ISBN manually</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          If you have the ISBN number, enter it directly to look up the book details.
+        </p>
       </div>
-      <p className="text-xs text-muted-foreground">
-        We check Google Books first, then Open Library.
-      </p>
-    </form>
+      <form
+        className="space-y-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (valid) onSubmit(value);
+        }}
+      >
+        <div className="space-y-1.5">
+          <Label htmlFor="isbn-lookup">ISBN-10 or ISBN-13</Label>
+          <div className="flex gap-2">
+            <Input
+              id="isbn-lookup"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder="e.g., 9780830816507"
+              inputMode="numeric"
+              autoComplete="off"
+            />
+            <Button type="submit" disabled={!valid} variant="secondary">
+              <Search className="mr-2 h-4 w-4" /> Look up
+            </Button>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          ℹ️ We'll search Google Books and Open Library for book details, author, and cover image.
+        </p>
+      </form>
+    </section>
   );
 }
