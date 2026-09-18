@@ -89,14 +89,31 @@ function SignInForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showReset, setShowReset] = useState(false);
+  const [unconfirmed, setUnconfirmed] = useState(false);
+  const [resending, setResending] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setUnconfirmed(false);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        setUnconfirmed(true);
+        return;
+      }
+      return toast.error(error.message);
+    }
     navigate({ to: "/reading", replace: true });
+  }
+
+  async function resendConfirmation() {
+    setResending(true);
+    const { error } = await supabase.auth.resend({ type: "signup", email });
+    setResending(false);
+    if (error) return toast.error(error.message);
+    toast.success("Confirmation email sent — check your inbox.");
   }
 
   if (showReset) return <ResetForm onBack={() => setShowReset(false)} initialEmail={email} />;
@@ -110,7 +127,10 @@ function SignInForm() {
           type="email"
           required
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setUnconfirmed(false);
+          }}
           autoComplete="email"
         />
       </div>
@@ -134,6 +154,27 @@ function SignInForm() {
           autoComplete="current-password"
         />
       </div>
+      {unconfirmed && (
+        <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <p className="text-sm font-medium text-destructive">
+            Your email isn't confirmed yet.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Check your inbox for the confirmation link we sent to {email}. Didn't get it?
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full"
+            disabled={resending}
+            onClick={resendConfirmation}
+          >
+            {resending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Resend confirmation email
+          </Button>
+        </div>
+      )}
       <Button type="submit" className="w-full" disabled={loading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Sign in
@@ -148,6 +189,8 @@ function SignUpForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -158,19 +201,56 @@ function SignUpForm() {
       options: {
         emailRedirectTo: window.location.origin,
         data: { name },
-        autoConfirmUser: true,
       },
     });
     setLoading(false);
     if (error) return toast.error(error.message);
     if (data.session) {
+      // Email confirmation is disabled on this project — the account is active immediately.
       toast.success("Welcome — your vault is ready.");
       navigate({ to: "/reading", replace: true });
       return;
     }
-    toast.success("Account created — you can sign in now.");
+    // No session means Supabase requires email confirmation before sign-in.
+    setAwaitingConfirmation(true);
   }
 
+  async function resendConfirmation() {
+    setResending(true);
+    const { error } = await supabase.auth.resend({ type: "signup", email });
+    setResending(false);
+    if (error) return toast.error(error.message);
+    toast.success("Confirmation email sent — check your inbox.");
+  }
+
+  if (awaitingConfirmation) {
+    return (
+      <div className="space-y-4 text-center">
+        <h2 className="text-base font-semibold">Check your email</h2>
+        <p className="text-sm text-muted-foreground">
+          We've sent a confirmation link to <span className="font-medium">{email}</span>. Click it
+          to activate your account, then come back here and sign in.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          disabled={resending}
+          onClick={resendConfirmation}
+        >
+          {resending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Resend confirmation email
+        </Button>
+        <button
+          type="button"
+          onClick={() => setAwaitingConfirmation(false)}
+          className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+        >
+          Use a different email
+        </button>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
