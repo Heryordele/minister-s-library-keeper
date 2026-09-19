@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn, createServerFn } from "@tanstack/react-start";
+import { useServerFn } from "@tanstack/react-start";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 import { Camera, Loader2, Search } from "lucide-react";
@@ -12,9 +12,9 @@ import { BookForm, type BookFormValues } from "@/components/book-form";
 import { supabase } from "@/integrations/supabase/client";
 import { booksKey } from "@/lib/books";
 import { mirrorRemoteCover } from "@/lib/covers.functions";
+import { serverLookupIsbn } from "@/lib/book-lookup.server";
 import {
   isValidIsbn,
-  lookupIsbn,
   normaliseIsbn,
   type LookupResult,
 } from "@/lib/book-lookup";
@@ -36,13 +36,6 @@ export const Route = createFileRoute("/_authenticated/books/scan")({
   component: ScanPage,
 });
 
-const serverLookupIsbn = createServerFn()
-  .validator((isbn: string) => isbn)
-  .handler(async (isbn: string) => {
-    const { lookupIsbn } = await import("@/lib/book-lookup");
-    return lookupIsbn(isbn, process.env.GOOGLE_BOOKS_API_KEY);
-  });
-
 type Stage =
   | { kind: "scanning" }
   | { kind: "looking-up"; isbn: string }
@@ -54,7 +47,8 @@ function ScanPage() {
   const [stage, setStage] = useState<Stage>({ kind: "scanning" });
   const [saveError, setSaveError] = useState<string | null>(null);
   const mirrorCover = useServerFn(mirrorRemoteCover);
-  const lookup = useServerFn(serverLookupIsbn);
+  const lookup = useServerFn(serverLookupIsbn );
+
 
   const save = useMutation({
     mutationFn: async (values: BookFormValues) => {
@@ -99,13 +93,18 @@ function ScanPage() {
   async function handleIsbn(rawIsbn: string) {
     const isbn = normaliseIsbn(rawIsbn);
     setStage({ kind: "looking-up", isbn });
-    const result = await lookup(isbn);
-    if (!result) {
-      toast.info("No match found — finish the details manually.");
+    try {
+      const result = await lookup(isbn);
+      if (!result) {
+        toast.info("No match found — finish the details manually.");
+        navigate({ to: "/books/new", search: { isbn } });
+        return;
+      }
+      setStage({ kind: "confirm", result });
+    } catch (e) {
+      toast.error("Failed to look up ISBN. Try adding manually.");
       navigate({ to: "/books/new", search: { isbn } });
-      return;
     }
-    setStage({ kind: "confirm", result });
   }
 
   if (stage.kind === "looking-up") {
