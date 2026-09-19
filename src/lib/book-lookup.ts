@@ -32,8 +32,9 @@ export function isValidIsbn(isbn: string): boolean {
 }
 
 async function fromGoogleBooks(isbn: string): Promise<LookupResult | null> {
+  const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
   const res = await fetchWithTimeout(
-    `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}`,
+    `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&key=${apiKey}`,
   );
   if (!res.ok) return null;
   const json = await res.json();
