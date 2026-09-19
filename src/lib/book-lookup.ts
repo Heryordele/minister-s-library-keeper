@@ -33,12 +33,25 @@ export function isValidIsbn(isbn: string): boolean {
 
 async function fromGoogleBooks(isbn: string, apiKey?: string): Promise<LookupResult | null> {
   const key = apiKey || process.env.GOOGLE_BOOKS_API_KEY;
-  const res = await fetchWithTimeout(
-    `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&key=${key}`,
-  );
-  if (!res.ok) return null;
+  console.log(`[DEBUG] Google Books: ISBN=${isbn}, hasKey=${!!key}`);
+
+  const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&key=${key}`;
+  console.log(`[DEBUG] Google Books URL:`, url.replace(key || 'NO_KEY', '***API_KEY***'));
+
+  const res = await fetchWithTimeout(url);
+  console.log(`[DEBUG] Google Books response status:`, res.status, res.ok);
+
+  if (!res.ok) {
+    console.log(`[DEBUG] Google Books API error response`);
+    return null;
+  }
+
   const json = await res.json();
+  console.log(`[DEBUG] Google Books totalItems:`, json?.totalItems);
+
   const info = json?.items?.[0]?.volumeInfo;
+  console.log(`[DEBUG] Google Books volumeInfo found:`, !!info);
+
   if (!info) return null;
   const year = info.publishedDate
     ? Number(String(info.publishedDate).slice(0, 4))
