@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { BookOpen, Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { suggestEmailCorrection } from "@/lib/email-typo-check";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -370,16 +369,16 @@ function GoogleButton() {
   const [loading, setLoading] = useState(false);
   async function onClick() {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
-    if (result.error) {
+    if (error) {
       setLoading(false);
-      toast.error(result.error.message ?? "Google sign-in failed.");
-      return;
+      toast.error(error.message ?? "Google sign-in failed.");
     }
-    if (result.redirected) return;
-    window.location.assign("/reading");
   }
   return (
     <Button
