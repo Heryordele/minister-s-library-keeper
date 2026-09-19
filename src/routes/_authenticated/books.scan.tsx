@@ -284,19 +284,27 @@ function Scanner({ onDetected, onScanFailed }: { onDetected: (isbn: string) => v
 
 function ManualIsbn({ onSubmit }: { onSubmit: (isbn: string) => void }) {
   const [value, setValue] = useState("");
+  const [touched, setTouched] = useState(false);
+  const normalised = normaliseIsbn(value);
   const valid = isValidIsbn(value);
+  // Only nag once there's enough input to plausibly judge — no red text on an empty field.
+  const showError = touched && value.trim().length > 0 && !valid;
+
   return (
     <section className="space-y-4 rounded-lg border border-border bg-card p-6">
       <div>
         <h2 className="text-lg font-semibold">Enter ISBN manually</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          If you have the ISBN number, enter it directly to look up the book details.
+          If you have the ISBN number, enter it directly to look up the book details. This needs
+          the actual 10 or 13-digit ISBN — usually printed above or below the barcode on the back
+          cover — not the title.
         </p>
       </div>
       <form
         className="space-y-3"
         onSubmit={(e) => {
           e.preventDefault();
+          setTouched(true);
           if (valid) onSubmit(value);
         }}
       >
@@ -307,14 +315,23 @@ function ManualIsbn({ onSubmit }: { onSubmit: (isbn: string) => void }) {
               id="isbn-lookup"
               value={value}
               onChange={(e) => setValue(e.target.value)}
+              onBlur={() => setTouched(true)}
               placeholder="e.g., 9780830816507"
               inputMode="numeric"
               autoComplete="off"
+              aria-invalid={showError}
             />
             <Button type="submit" disabled={!valid} variant="secondary">
               <Search className="mr-2 h-4 w-4" /> Look up
             </Button>
           </div>
+          {showError && (
+            <p className="text-xs text-destructive">
+              That's {normalised.length} digit{normalised.length === 1 ? "" : "s"} — an ISBN is
+              10 or 13 digits. Don't have it handy? Use{" "}
+              <span className="font-medium">Add manually</span> instead and skip the ISBN field.
+            </p>
+          )}
         </div>
         <p className="text-xs text-muted-foreground">
           ℹ️ We'll search Google Books and Open Library for book details, author, and cover image.
