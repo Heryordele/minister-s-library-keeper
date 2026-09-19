@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { lookupIsbn } from "./book-lookup";
+import { lookupIsbn, type LookupResult } from "./book-lookup";
 
 export const serverLookupIsbn = createServerFn()
   .handler(async (data: string | { data: string }) => {
@@ -17,5 +17,40 @@ export const serverLookupIsbn = createServerFn()
     } catch (e) {
       console.error(`[ERROR] ISBN lookup failed:`, e);
       throw e;
+    }
+  });
+
+// Enrich an existing book with ISBN lookup data
+export const enrichBook = createServerFn()
+  .handler(async (data: string | { data: string }) => {
+    try {
+      const isbn = typeof data === "string" ? data : (data as any).data;
+
+      console.log(`[DEBUG] Enriching book with ISBN: ${isbn}`);
+
+      const lookupResult = await lookupIsbn(isbn, process.env.GOOGLE_BOOKS_API_KEY);
+
+      if (!lookupResult) {
+        return {
+          success: false,
+          error: "No book found for this ISBN in Google Books or Open Library",
+          data: null,
+        };
+      }
+
+      console.log(`[DEBUG] Enrichment data found:`, lookupResult);
+
+      return {
+        success: true,
+        error: null,
+        data: lookupResult,
+      };
+    } catch (e) {
+      console.error(`[ERROR] Book enrichment failed:`, e);
+      return {
+        success: false,
+        error: e instanceof Error ? e.message : "Unknown error",
+        data: null,
+      };
     }
   });
