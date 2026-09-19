@@ -6,6 +6,7 @@ import { BookOpen, Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { suggestEmailCorrection } from "@/lib/email-typo-check";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -191,6 +192,7 @@ function SignUpForm() {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -272,9 +274,29 @@ function SignUpForm() {
           type="email"
           required
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (emailSuggestion) setEmailSuggestion(null);
+          }}
+          onBlur={() => setEmailSuggestion(suggestEmailCorrection(email))}
           autoComplete="email"
         />
+        {emailSuggestion && (
+          <p className="text-xs text-muted-foreground">
+            Did you mean{" "}
+            <button
+              type="button"
+              className="font-medium text-accent-foreground/80 underline-offset-4 hover:underline"
+              onClick={() => {
+                setEmail(emailSuggestion);
+                setEmailSuggestion(null);
+              }}
+            >
+              {emailSuggestion}
+            </button>
+            ?
+          </p>
+        )}
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="signup-password">Password</Label>
