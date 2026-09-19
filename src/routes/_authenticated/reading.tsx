@@ -15,6 +15,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { useUserRole } from "@/lib/use-user-role";
+import { MinisterDashboard } from "@/components/dashboards/minister-dashboard";
+import { StudentDashboard } from "@/components/dashboards/student-dashboard";
+import { InstitutionDashboard } from "@/components/dashboards/institution-dashboard";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { ReadingGoalDialog } from "@/components/reading-goal-dialog";
 import { StatCard } from "@/components/stat-card";
@@ -67,6 +71,7 @@ export const Route = createFileRoute("/_authenticated/reading")({
 
 function ReadingPage() {
   const qc = useQueryClient();
+  const { role, loading: roleLoading } = useUserRole();
 
   const { data: goals, isLoading } = useQuery({
     queryKey: readingGoalsKey,
@@ -98,6 +103,33 @@ function ReadingPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not remove the goal."),
   });
 
+  // Show role-specific dashboard if role is available
+  if (!roleLoading && role) {
+    const pageTitle = {
+      minister: "Your Pastoral Library",
+      student: "Your Reading Goals",
+      institution_admin: "Library Dashboard",
+    }[role];
+
+    const pageSubtitle = {
+      minister: "Cataloging, lending, and stewardship.",
+      student: "Track progress, build discipline, reach your goals.",
+      institution_admin: "Institutional library and holdings overview.",
+    }[role];
+
+    return (
+      <>
+        <PageHeader title={pageTitle} subtitle={pageSubtitle} />
+        <div className="mx-auto max-w-6xl px-4 py-8 md:px-8">
+          {role === "minister" && <MinisterDashboard />}
+          {role === "student" && <StudentDashboard />}
+          {role === "institution_admin" && <InstitutionDashboard />}
+        </div>
+      </>
+    );
+  }
+
+  // Fallback to original dashboard for users without role set
   const current = liveStreakDays(streak ?? null);
   const longest = streak?.longest_streak_days ?? 0;
   const dash = computeReadingDashboard(books ?? [], progress ?? [], categories ?? []);

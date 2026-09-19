@@ -204,12 +204,12 @@ function SignUpForm() {
         data: { name },
       },
     });
-    setLoading(false);
+    setLoading(true);
     if (error) return toast.error(error.message);
     if (data.session) {
-      // Email confirmation is disabled on this project — the account is active immediately.
-      toast.success("Welcome — your vault is ready.");
-      navigate({ to: "/reading", replace: true });
+      // Email confirmation is disabled — redirect to role selection for new account setup
+      toast.success("Account created! Now let's set up your profile.");
+      navigate({ to: "/onboarding/role-select", replace: true });
       return;
     }
     // No session means Supabase requires email confirmation before sign-in.
