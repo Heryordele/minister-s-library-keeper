@@ -31,10 +31,10 @@ export function isValidIsbn(isbn: string): boolean {
   return v.length === 10 || v.length === 13;
 }
 
-async function fromGoogleBooks(isbn: string): Promise<LookupResult | null> {
-  const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
+async function fromGoogleBooks(isbn: string, apiKey?: string): Promise<LookupResult | null> {
+  const key = apiKey || process.env.GOOGLE_BOOKS_API_KEY;
   const res = await fetchWithTimeout(
-    `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&key=${apiKey}`,
+    `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&key=${key}`,
   );
   if (!res.ok) return null;
   const json = await res.json();
@@ -88,11 +88,11 @@ async function fromOpenLibrary(isbn: string): Promise<LookupResult | null> {
 }
 
 /** Google Books first, Open Library as fallback. Returns null when neither has a match. */
-export async function lookupIsbn(rawIsbn: string): Promise<LookupResult | null> {
+export async function lookupIsbn(rawIsbn: string, apiKey?: string): Promise<LookupResult | null> {
   const isbn = normaliseIsbn(rawIsbn);
   if (!isbn) return null;
   try {
-    const google = await fromGoogleBooks(isbn);
+    const google = await fromGoogleBooks(isbn, apiKey);
     if (google?.title) return google;
   } catch {
     /* fall through to Open Library */
