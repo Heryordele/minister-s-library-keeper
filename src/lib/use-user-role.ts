@@ -18,13 +18,17 @@ export function useUserRole() {
           return;
         }
 
+        // A user can hold more than one role row (unique on user_id + role),
+        // e.g. after re-picking a role. Use the most recently chosen one.
         const { data, error: err } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", user.user.id)
-          .single();
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-        if (err && err.code !== "PGRST116") throw err; // PGRST116 = no rows found
+        if (err) throw err;
 
         setRole((data?.role as AppRole) || null);
         setError(null);

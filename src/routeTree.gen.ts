@@ -18,6 +18,11 @@ import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedLendingRouteImport } from './routes/_authenticated/lending'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedReadingRouteImport } from './routes/_authenticated/reading'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as OnboardingInstitutionRouteImport } from './routes/onboarding/institution'
+import { Route as OnboardingMinisterRouteImport } from './routes/onboarding/minister'
+import { Route as OnboardingRoleSelectRouteImport } from './routes/onboarding/role-select'
+import { Route as OnboardingStudentRouteImport } from './routes/onboarding/student'
 import { Route as AuthenticatedBooksBookIdRouteImport } from './routes/_authenticated/books.$bookId'
 import { Route as AuthenticatedBooksImportRouteImport } from './routes/_authenticated/books.import'
 import { Route as AuthenticatedBooksNewRouteImport } from './routes/_authenticated/books.new'
@@ -68,6 +73,31 @@ const AuthenticatedReadingRoute = AuthenticatedReadingRouteImport.update({
   path: '/reading',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const OnboardingInstitutionRoute = OnboardingInstitutionRouteImport.update({
+  id: '/onboarding/institution',
+  path: '/onboarding/institution',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingMinisterRoute = OnboardingMinisterRouteImport.update({
+  id: '/onboarding/minister',
+  path: '/onboarding/minister',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoleSelectRoute = OnboardingRoleSelectRouteImport.update({
+  id: '/onboarding/role-select',
+  path: '/onboarding/role-select',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingStudentRoute = OnboardingStudentRouteImport.update({
+  id: '/onboarding/student',
+  path: '/onboarding/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedBooksBookIdRoute =
   AuthenticatedBooksBookIdRouteImport.update({
     id: '/books/$bookId',
@@ -98,13 +128,18 @@ const ApiPublicHooksRemindersRoute = ApiPublicHooksRemindersRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/account': typeof AuthenticatedAccountRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/lending': typeof AuthenticatedLendingRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/reading': typeof AuthenticatedReadingRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/onboarding/institution': typeof OnboardingInstitutionRoute
+  '/onboarding/minister': typeof OnboardingMinisterRoute
+  '/onboarding/role-select': typeof OnboardingRoleSelectRoute
+  '/onboarding/student': typeof OnboardingStudentRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/books/import': typeof AuthenticatedBooksImportRoute
   '/books/new': typeof AuthenticatedBooksNewRoute
@@ -113,13 +148,18 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/account': typeof AuthenticatedAccountRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/lending': typeof AuthenticatedLendingRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/reading': typeof AuthenticatedReadingRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/onboarding/institution': typeof OnboardingInstitutionRoute
+  '/onboarding/minister': typeof OnboardingMinisterRoute
+  '/onboarding/role-select': typeof OnboardingRoleSelectRoute
+  '/onboarding/student': typeof OnboardingStudentRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/books/import': typeof AuthenticatedBooksImportRoute
   '/books/new': typeof AuthenticatedBooksNewRoute
@@ -130,13 +170,18 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/lending': typeof AuthenticatedLendingRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/reading': typeof AuthenticatedReadingRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/onboarding/institution': typeof OnboardingInstitutionRoute
+  '/onboarding/minister': typeof OnboardingMinisterRoute
+  '/onboarding/role-select': typeof OnboardingRoleSelectRoute
+  '/onboarding/student': typeof OnboardingStudentRoute
   '/_authenticated/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/_authenticated/books/import': typeof AuthenticatedBooksImportRoute
   '/_authenticated/books/new': typeof AuthenticatedBooksNewRoute
@@ -154,6 +199,11 @@ export interface FileRouteTypes {
     | '/lending'
     | '/library'
     | '/reading'
+    | '/auth/callback'
+    | '/onboarding/institution'
+    | '/onboarding/minister'
+    | '/onboarding/role-select'
+    | '/onboarding/student'
     | '/books/$bookId'
     | '/books/import'
     | '/books/new'
@@ -169,6 +219,11 @@ export interface FileRouteTypes {
     | '/lending'
     | '/library'
     | '/reading'
+    | '/auth/callback'
+    | '/onboarding/institution'
+    | '/onboarding/minister'
+    | '/onboarding/role-select'
+    | '/onboarding/student'
     | '/books/$bookId'
     | '/books/import'
     | '/books/new'
@@ -185,6 +240,11 @@ export interface FileRouteTypes {
     | '/_authenticated/lending'
     | '/_authenticated/library'
     | '/_authenticated/reading'
+    | '/auth/callback'
+    | '/onboarding/institution'
+    | '/onboarding/minister'
+    | '/onboarding/role-select'
+    | '/onboarding/student'
     | '/_authenticated/books/$bookId'
     | '/_authenticated/books/import'
     | '/_authenticated/books/new'
@@ -195,8 +255,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
+  OnboardingInstitutionRoute: typeof OnboardingInstitutionRoute
+  OnboardingMinisterRoute: typeof OnboardingMinisterRoute
+  OnboardingRoleSelectRoute: typeof OnboardingRoleSelectRoute
+  OnboardingStudentRoute: typeof OnboardingStudentRoute
   ApiPublicHooksRemindersRoute: typeof ApiPublicHooksRemindersRoute
 }
 
@@ -265,6 +329,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReadingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/onboarding/institution': {
+      id: '/onboarding/institution'
+      path: '/onboarding/institution'
+      fullPath: '/onboarding/institution'
+      preLoaderRoute: typeof OnboardingInstitutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/minister': {
+      id: '/onboarding/minister'
+      path: '/onboarding/minister'
+      fullPath: '/onboarding/minister'
+      preLoaderRoute: typeof OnboardingMinisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/role-select': {
+      id: '/onboarding/role-select'
+      path: '/onboarding/role-select'
+      fullPath: '/onboarding/role-select'
+      preLoaderRoute: typeof OnboardingRoleSelectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/student': {
+      id: '/onboarding/student'
+      path: '/onboarding/student'
+      fullPath: '/onboarding/student'
+      preLoaderRoute: typeof OnboardingStudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/books/$bookId': {
       id: '/_authenticated/books/$bookId'
       path: '/books/$bookId'
@@ -330,11 +429,25 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthCallbackRoute: typeof AuthCallbackRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackRoute: AuthCallbackRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
+  OnboardingInstitutionRoute: OnboardingInstitutionRoute,
+  OnboardingMinisterRoute: OnboardingMinisterRoute,
+  OnboardingRoleSelectRoute: OnboardingRoleSelectRoute,
+  OnboardingStudentRoute: OnboardingStudentRoute,
   ApiPublicHooksRemindersRoute: ApiPublicHooksRemindersRoute,
 }
 export const routeTree = rootRouteImport

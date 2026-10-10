@@ -37,7 +37,8 @@ function RoleSelectPage() {
         role: selectedRole,
       });
 
-      if (error) throw error;
+      // 23505 = unique violation: the user already has this role, which is fine.
+      if (error && error.code !== "23505") throw error;
 
       // Redirect to role-specific onboarding
       const onboardingRoutes = {
