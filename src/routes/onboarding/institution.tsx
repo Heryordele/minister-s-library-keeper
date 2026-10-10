@@ -34,11 +34,12 @@ function InstitutionOnboarding() {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user?.id) throw new Error("Not authenticated");
 
-      // Update profile with institution info
       const { error } = await supabase
         .from("profiles")
         .update({
-          name: institutionName,
+          organization_name: institutionName.trim(),
+          library_name: libraryName.trim(),
+          admin_email: adminEmail.trim() || null,
         })
         .eq("id", user.user.id);
 

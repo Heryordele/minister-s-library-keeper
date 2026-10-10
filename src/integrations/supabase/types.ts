@@ -200,9 +200,11 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_email: string | null
           created_at: string
           email: string | null
           id: string
+          library_name: string | null
           name: string | null
           organization_name: string | null
           plan: Database["public"]["Enums"]["plan_type"]
@@ -210,9 +212,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admin_email?: string | null
           created_at?: string
           email?: string | null
           id: string
+          library_name?: string | null
           name?: string | null
           organization_name?: string | null
           plan?: Database["public"]["Enums"]["plan_type"]
@@ -220,9 +224,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admin_email?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          library_name?: string | null
           name?: string | null
           organization_name?: string | null
           plan?: Database["public"]["Enums"]["plan_type"]
