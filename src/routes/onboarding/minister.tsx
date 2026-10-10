@@ -33,11 +33,11 @@ function MinisterOnboarding() {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user?.id) throw new Error("Not authenticated");
 
-      // Update profile with ministry info (stored as JSON metadata for now)
       const { error } = await supabase
         .from("profiles")
         .update({
-          name: user.user.email?.split("@")[0],
+          organization_name: churchName.trim(),
+          position: position.trim() || null,
         })
         .eq("id", user.user.id);
 
