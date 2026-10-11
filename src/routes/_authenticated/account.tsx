@@ -19,6 +19,10 @@ type Profile = {
   name: string | null;
   email: string | null;
   plan: string;
+  organization_name?: string | null;
+  position?: string | null;
+  library_name?: string | null;
+  admin_email?: string | null;
 };
 
 function AccountPage() {
@@ -37,7 +41,7 @@ function AccountPage() {
       const [{ data: p }, { data: r }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("name, email, plan")
+          .select("name, email, plan, organization_name, position, library_name, admin_email")
           .eq("id", userData.user.id)
           .maybeSingle(),
         supabase
@@ -101,6 +105,16 @@ function AccountPage() {
                     {profile.plan}
                   </Badge>
                 </Field>
+                {profile.organization_name && (
+                  <Field label={role === "institution_admin" ? "Institution" : "Church / ministry"}>
+                    {profile.organization_name}
+                  </Field>
+                )}
+                {profile.position && <Field label="Position">{profile.position}</Field>}
+                {profile.library_name && <Field label="Library">{profile.library_name}</Field>}
+                {profile.admin_email && (
+                  <Field label="Administrator email">{profile.admin_email}</Field>
+                )}
               </div>
             </div>
 
