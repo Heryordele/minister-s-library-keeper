@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Mail, UserCircle, ShieldCheck } from "lucide-react";
+import { Loader2, Mail, Pencil, UserCircle, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
@@ -9,6 +10,9 @@ import { SignOutButton } from "@/components/app-shell";
 import { StreakBadges } from "@/components/streak-badges";
 import { fetchStreak, liveStreakDays, readingStreakKey } from "@/lib/reading";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({ meta: [{ title: "Account — Minister's Vault" }] }),
@@ -105,18 +109,16 @@ function AccountPage() {
                     {profile.plan}
                   </Badge>
                 </Field>
-                {profile.organization_name && (
-                  <Field label={role === "institution_admin" ? "Institution" : "Church / ministry"}>
-                    {profile.organization_name}
-                  </Field>
-                )}
-                {profile.position && <Field label="Position">{profile.position}</Field>}
-                {profile.library_name && <Field label="Library">{profile.library_name}</Field>}
-                {profile.admin_email && (
-                  <Field label="Administrator email">{profile.admin_email}</Field>
-                )}
               </div>
             </div>
+
+            {(role === "minister" || role === "institution_admin") && (
+              <SetupDetails
+                role={role}
+                profile={profile}
+                onSaved={(updates) => setProfile({ ...profile, ...updates })}
+              />
+            )}
 
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
               <h2 className="text-base font-semibold">Reading discipline</h2>
@@ -155,6 +157,122 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
         {label}
       </div>
       <div className="mt-1.5">{children}</div>
+    </div>
+  );
+}
+
+type SetupKey = "organization_name" | "position" | "library_name" | "admin_email";
+
+const SETUP_FIELDS: Record<
+  "minister" | "institution_admin",
+  { key: SetupKey; label: string; required?: boolean; type?: string }[]
+> = {
+  minister: [
+    { key: "organization_name", label: "Church / ministry", required: true },
+    { key: "position", label: "Position" },
+  ],
+  institution_admin: [
+    { key: "organization_name", label: "Institution", required: true },
+    { key: "library_name", label: "Library", required: true },
+    { key: "admin_email", label: "Administrator email", type: "email" },
+  ],
+};
+
+function SetupDetails({
+  role,
+  profile,
+  onSaved,
+}: {
+  role: "minister" | "institution_admin";
+  profile: Profile;
+  onSaved: (updates: Partial<Record<SetupKey, string | null>>) => void;
+}) {
+  const fields = SETUP_FIELDS[role];
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [values, setValues] = useState<Record<string, string>>({});
+
+  function startEditing() {
+    setValues(Object.fromEntries(fields.map((f) => [f.key, profile[f.key] ?? ""])));
+    setEditing(true);
+  }
+
+  async function save() {
+    const updates: Partial<Record<SetupKey, string | null>> = {};
+    for (const f of fields) {
+      const value = (values[f.key] ?? "").trim();
+      if (f.required && !value) return toast.error(`${f.label} is required.`);
+      if (f.type === "email" && value && !/^\S+@\S+\.\S+$/.test(value)) {
+        return toast.error("Enter a valid email address.");
+      }
+      updates[f.key] = value || null;
+    }
+
+    setSaving(true);
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      setSaving(false);
+      return;
+    }
+    const { error } = await supabase.from("profiles").update(updates).eq("id", userData.user.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    onSaved(updates);
+    setEditing(false);
+    toast.success("Details saved.");
+  }
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-base font-semibold">
+          {role === "institution_admin" ? "Institution details" : "Ministry details"}
+        </h2>
+        {!editing && (
+          <Button variant="outline" size="sm" onClick={startEditing}>
+            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            Edit
+          </Button>
+        )}
+      </div>
+
+      {editing ? (
+        <div className="mt-4 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {fields.map((f) => (
+              <div key={f.key} className="space-y-1.5">
+                <Label htmlFor={`setup-${f.key}`}>
+                  {f.label}
+                  {!f.required && <span className="text-muted-foreground"> (optional)</span>}
+                </Label>
+                <Input
+                  id={`setup-${f.key}`}
+                  type={f.type ?? "text"}
+                  value={values[f.key] ?? ""}
+                  onChange={(e) => setValues({ ...values, [f.key]: e.target.value })}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={save} disabled={saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save
+            </Button>
+            <Button variant="ghost" onClick={() => setEditing(false)} disabled={saving}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          {fields.map((f) => (
+            <Field key={f.key} label={f.label}>
+              {profile[f.key] || <span className="text-muted-foreground">—</span>}
+            </Field>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
