@@ -1,12 +1,12 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { BookOpen, GraduationCap, Loader2 } from "lucide-react";
+import { BookOpen, Building2, GraduationCap, Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type Role = "minister" | "student";
+type Role = "minister" | "student" | "institution_admin";
 
 export function OnboardingGate({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<"checking" | "needs-role" | "ready">("checking");
@@ -75,18 +75,24 @@ function RolePicker({ onDone }: { onDone: () => void }) {
       body: "Studying scripture and building your reading foundation.",
       icon: GraduationCap,
     },
+    {
+      value: "institution_admin",
+      title: "Institution / seminary",
+      body: "Managing a shared library for a college, seminary, or church.",
+      icon: Building2,
+    },
   ];
 
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4 py-10">
-      <div className="w-full max-w-xl">
+      <div className="w-full max-w-3xl">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-semibold">Welcome to your vault</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Which best describes you? You can change this later.
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           {options.map((opt) => {
             const active = selected === opt.value;
             const Icon = opt.icon;
@@ -125,9 +131,6 @@ function RolePicker({ onDone }: { onDone: () => void }) {
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Continue
         </Button>
-        <p className="mt-4 text-center text-xs text-muted-foreground">
-          Institution accounts are coming soon.
-        </p>
       </div>
     </div>
   );
