@@ -110,7 +110,11 @@ function SignInForm() {
 
   async function resendConfirmation() {
     setResending(true);
-    const { error } = await supabase.auth.resend({ type: "signup", email });
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
     setResending(false);
     if (error) return toast.error(error.message);
     toast.success("Confirmation email sent — check your inbox.");
@@ -200,11 +204,12 @@ function SignUpForm() {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        // The confirmation link signs them in and continues to onboarding.
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: { name },
       },
     });
-    setLoading(true);
+    setLoading(false);
     if (error) return toast.error(error.message);
     if (data.session) {
       // Email confirmation is disabled — redirect to role selection for new account setup
@@ -218,7 +223,11 @@ function SignUpForm() {
 
   async function resendConfirmation() {
     setResending(true);
-    const { error } = await supabase.auth.resend({ type: "signup", email });
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
     setResending(false);
     if (error) return toast.error(error.message);
     toast.success("Confirmation email sent — check your inbox.");

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchInstitutionRequestStatus } from "@/lib/institution-request";
 import { Button } from "@/components/ui/button";
 import { Loader2, BookOpen, Users, Building2 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,6 +20,20 @@ function RoleSelectPage() {
   const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState<"minister" | "student" | "institution_admin" | null>(null);
   const [loading, setLoading] = useState(false);
+  const [institutionRejected, setInstitutionRejected] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
+      const status = await fetchInstitutionRequestStatus(data.user.id);
+      if (!cancelled) setInstitutionRejected(status === "rejected");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleRoleSelect() {
     if (!selectedRole) {
@@ -57,7 +72,7 @@ function RoleSelectPage() {
     }
   }
 
-  const roles = [
+  const allRoles = [
     {
       id: "minister" as const,
       title: "Pastor/Minister",
@@ -80,6 +95,10 @@ function RoleSelectPage() {
       highlight: "Requires approval before the institution dashboard unlocks",
     },
   ];
+  // A rejected institution request can't be refiled; offer the personal roles.
+  const roles = institutionRejected
+    ? allRoles.filter((role) => role.id !== "institution_admin")
+    : allRoles;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -91,9 +110,17 @@ function RoleSelectPage() {
           <p className="text-lg text-slate-600">
             Choose the role that best describes how you'll use Minister's Vault
           </p>
+          {institutionRejected && (
+            <p className="mt-3 text-sm text-slate-600">
+              Your institution account request wasn't approved. You can still use a personal
+              account.
+            </p>
+          )}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
+        <div
+          className={`grid gap-6 mb-8 ${institutionRejected ? "md:grid-cols-2" : "md:grid-cols-3"}`}
+        >
           {roles.map((role) => {
             const Icon = role.icon;
             const isSelected = selectedRole === role.id;
