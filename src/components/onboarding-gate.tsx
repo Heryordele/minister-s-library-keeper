@@ -1,15 +1,19 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { BookOpen, Building2, GraduationCap, Loader2 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { BookOpen, Building2, Clock, GraduationCap, Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { SignOutButton } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import { fetchInstitutionRequestStatus, requestInstitutionAccess } from "@/lib/institution-request";
 import { cn } from "@/lib/utils";
 
 type Role = "minister" | "student" | "institution_admin";
 
 export function OnboardingGate({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<"checking" | "needs-role" | "ready">("checking");
+  const [status, setStatus] = useState<"checking" | "needs-role" | "pending" | "ready">("checking");
+  const [institutionRejected, setInstitutionRejected] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,7 +26,13 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
         .eq("user_id", userData.user.id)
         .limit(1);
       if (cancelled) return;
-      setStatus(roles && roles.length > 0 ? "ready" : "needs-role");
+      if (roles && roles.length > 0) return setStatus("ready");
+
+      // No role yet: an institution request may be awaiting approval.
+      const request = await fetchInstitutionRequestStatus(userData.user.id);
+      if (cancelled) return;
+      setInstitutionRejected(request === "rejected");
+      setStatus(request === "pending" ? "pending" : "needs-role");
     })();
     return () => {
       cancelled = true;
@@ -36,13 +46,43 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
       </div>
     );
   }
+  if (status === "pending") {
+    return <AwaitingApproval />;
+  }
   if (status === "needs-role") {
-    return <RolePicker onDone={() => setStatus("ready")} />;
+    return (
+      <RolePicker institutionRejected={institutionRejected} onDone={() => setStatus("ready")} />
+    );
   }
   return <>{children}</>;
 }
 
-function RolePicker({ onDone }: { onDone: () => void }) {
+function AwaitingApproval() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-background px-4 py-10">
+      <div className="w-full max-w-md text-center">
+        <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-muted">
+          <Clock className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <h1 className="text-2xl font-semibold">Awaiting approval</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Institution accounts are reviewed before the library dashboard unlocks. We'll let you in
+          as soon as your request is approved.
+        </p>
+        <SignOutButton className="mt-6" />
+      </div>
+    </div>
+  );
+}
+
+function RolePicker({
+  institutionRejected,
+  onDone,
+}: {
+  institutionRejected: boolean;
+  onDone: () => void;
+}) {
+  const navigate = useNavigate();
   const [selected, setSelected] = useState<Role | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -54,6 +94,17 @@ function RolePicker({ onDone }: { onDone: () => void }) {
       setSaving(false);
       return;
     }
+    if (selected === "institution_admin") {
+      // Institution accounts need approval: file a request, then collect details.
+      try {
+        await requestInstitutionAccess(userData.user.id);
+      } catch (e) {
+        setSaving(false);
+        return toast.error(e instanceof Error ? e.message : "Could not submit your request.");
+      }
+      navigate({ to: "/onboarding/institution" });
+      return;
+    }
     const { error } = await supabase
       .from("user_roles")
       .insert({ user_id: userData.user.id, role: selected });
@@ -62,7 +113,7 @@ function RolePicker({ onDone }: { onDone: () => void }) {
     onDone();
   }
 
-  const options: { value: Role; title: string; body: string; icon: typeof BookOpen }[] = [
+  const allOptions: { value: Role; title: string; body: string; icon: typeof BookOpen }[] = [
     {
       value: "minister",
       title: "Minister / Pastor",
@@ -82,6 +133,9 @@ function RolePicker({ onDone }: { onDone: () => void }) {
       icon: Building2,
     },
   ];
+  const options = institutionRejected
+    ? allOptions.filter((opt) => opt.value !== "institution_admin")
+    : allOptions;
 
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4 py-10">
@@ -91,8 +145,16 @@ function RolePicker({ onDone }: { onDone: () => void }) {
           <p className="mt-2 text-sm text-muted-foreground">
             Which best describes you? You can change this later.
           </p>
+          {institutionRejected && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your institution account request wasn't approved. You can still use a personal
+              account.
+            </p>
+          )}
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div
+          className={cn("grid gap-4", institutionRejected ? "sm:grid-cols-2" : "md:grid-cols-3")}
+        >
           {options.map((opt) => {
             const active = selected === opt.value;
             const Icon = opt.icon;

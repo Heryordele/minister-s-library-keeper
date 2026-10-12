@@ -165,6 +165,30 @@ export type Database = {
         }
         Relationships: []
       }
+      institution_requests: {
+        Row: {
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           channel: Database["public"]["Enums"]["notification_channel"]
@@ -373,12 +397,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_institution_request: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      reject_institution_request: {
+        Args: { _user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
