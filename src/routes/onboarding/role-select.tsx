@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { requestInstitutionAccess } from "@/lib/institution-request";
 import { Button } from "@/components/ui/button";
 import { Loader2, BookOpen, Users, Building2 } from "lucide-react";
 import { toast } from "sonner";
@@ -32,10 +31,9 @@ function RoleSelectPage() {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user?.id) throw new Error("Not authenticated");
 
-      if (selectedRole === "institution_admin") {
-        // Institution accounts need approval; file a request instead of the role.
-        await requestInstitutionAccess(user.user.id);
-      } else {
+      // Institution accounts need approval: the request is filed when the
+      // institution setup form is submitted, so it carries their details.
+      if (selectedRole !== "institution_admin") {
         const { error } = await supabase.from("user_roles").insert({
           user_id: user.user.id,
           role: selectedRole,

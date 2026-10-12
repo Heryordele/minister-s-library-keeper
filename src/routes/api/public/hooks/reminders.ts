@@ -48,6 +48,10 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+        // Fallback for institution request alerts the insert trigger missed.
+        const { sendInstitutionRequestAlerts } = await import("@/lib/institution-alerts.server");
+        await sendInstitutionRequestAlerts();
+
         const now = startOfDay(new Date());
         const stamp = now.toISOString().slice(0, 10);
         const pending: Pending[] = [];

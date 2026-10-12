@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { requestInstitutionAccess } from "@/lib/institution-request";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +45,9 @@ function InstitutionOnboarding() {
         .eq("id", user.user.id);
 
       if (error) throw error;
+
+      // Filed after the details are saved so the owner's alert includes them.
+      await requestInstitutionAccess(user.user.id);
 
       toast.success("Request submitted. We'll review your institution account shortly.");
       navigate({ to: "/reading", replace: true });

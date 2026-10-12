@@ -6,7 +6,7 @@ import { BookOpen, Building2, Clock, GraduationCap, Loader2 } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import { SignOutButton } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
-import { fetchInstitutionRequestStatus, requestInstitutionAccess } from "@/lib/institution-request";
+import { fetchInstitutionRequestStatus } from "@/lib/institution-request";
 import { cn } from "@/lib/utils";
 
 type Role = "minister" | "student" | "institution_admin";
@@ -95,13 +95,7 @@ function RolePicker({
       return;
     }
     if (selected === "institution_admin") {
-      // Institution accounts need approval: file a request, then collect details.
-      try {
-        await requestInstitutionAccess(userData.user.id);
-      } catch (e) {
-        setSaving(false);
-        return toast.error(e instanceof Error ? e.message : "Could not submit your request.");
-      }
+      // Institution accounts need approval; the setup form files the request.
       navigate({ to: "/onboarding/institution" });
       return;
     }
