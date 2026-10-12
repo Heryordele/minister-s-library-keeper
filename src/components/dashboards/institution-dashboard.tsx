@@ -99,7 +99,7 @@ export function InstitutionDashboard() {
         <h3 className="font-serif font-semibold text-slate-900 flex items-center gap-2">
           <Building2 className="h-5 w-5" /> Administrative Actions
         </h3>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Link to="/books/scan">
             <Button variant="secondary" className="w-full justify-start text-sm">
               📱 Add Books
@@ -111,6 +111,11 @@ export function InstitutionDashboard() {
           <Link to="/analytics">
             <Button variant="secondary" className="w-full justify-start text-sm">
               📊 View Reports
+            </Button>
+          </Link>
+          <Link to="/reading" search={{ view: "goals" }}>
+            <Button variant="secondary" className="w-full justify-start text-sm">
+              🎯 Reading goals & streaks
             </Button>
           </Link>
         </div>
