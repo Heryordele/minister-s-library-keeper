@@ -27,6 +27,7 @@ import { Route as AuthenticatedBooksBookIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedBooksImportRouteImport } from './routes/_authenticated/books.import'
 import { Route as AuthenticatedBooksNewRouteImport } from './routes/_authenticated/books.new'
 import { Route as AuthenticatedBooksScanRouteImport } from './routes/_authenticated/books.scan'
+import { Route as ApiPublicHooksInstitutionRequestsRouteImport } from './routes/api/public/hooks/institution-requests'
 import { Route as ApiPublicHooksRemindersRouteImport } from './routes/api/public/hooks/reminders'
 
 const IndexRoute = IndexRouteImport.update({
@@ -120,6 +121,12 @@ const AuthenticatedBooksScanRoute = AuthenticatedBooksScanRouteImport.update({
   path: '/books/scan',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicHooksInstitutionRequestsRoute =
+  ApiPublicHooksInstitutionRequestsRouteImport.update({
+    id: '/api/public/hooks/institution-requests',
+    path: '/api/public/hooks/institution-requests',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRemindersRoute = ApiPublicHooksRemindersRouteImport.update({
   id: '/api/public/hooks/reminders',
   path: '/api/public/hooks/reminders',
@@ -144,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/books/import': typeof AuthenticatedBooksImportRoute
   '/books/new': typeof AuthenticatedBooksNewRoute
   '/books/scan': typeof AuthenticatedBooksScanRoute
+  '/api/public/hooks/institution-requests': typeof ApiPublicHooksInstitutionRequestsRoute
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
 }
 export interface FileRoutesByTo {
@@ -164,6 +172,7 @@ export interface FileRoutesByTo {
   '/books/import': typeof AuthenticatedBooksImportRoute
   '/books/new': typeof AuthenticatedBooksNewRoute
   '/books/scan': typeof AuthenticatedBooksScanRoute
+  '/api/public/hooks/institution-requests': typeof ApiPublicHooksInstitutionRequestsRoute
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
 }
 export interface FileRoutesById {
@@ -186,6 +195,7 @@ export interface FileRoutesById {
   '/_authenticated/books/import': typeof AuthenticatedBooksImportRoute
   '/_authenticated/books/new': typeof AuthenticatedBooksNewRoute
   '/_authenticated/books/scan': typeof AuthenticatedBooksScanRoute
+  '/api/public/hooks/institution-requests': typeof ApiPublicHooksInstitutionRequestsRoute
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
 }
 export interface FileRouteTypes {
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/books/import'
     | '/books/new'
     | '/books/scan'
+    | '/api/public/hooks/institution-requests'
     | '/api/public/hooks/reminders'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/books/import'
     | '/books/new'
     | '/books/scan'
+    | '/api/public/hooks/institution-requests'
     | '/api/public/hooks/reminders'
   id:
     | '__root__'
@@ -249,6 +261,7 @@ export interface FileRouteTypes {
     | '/_authenticated/books/import'
     | '/_authenticated/books/new'
     | '/_authenticated/books/scan'
+    | '/api/public/hooks/institution-requests'
     | '/api/public/hooks/reminders'
   fileRoutesById: FileRoutesById
 }
@@ -261,6 +274,7 @@ export interface RootRouteChildren {
   OnboardingMinisterRoute: typeof OnboardingMinisterRoute
   OnboardingRoleSelectRoute: typeof OnboardingRoleSelectRoute
   OnboardingStudentRoute: typeof OnboardingStudentRoute
+  ApiPublicHooksInstitutionRequestsRoute: typeof ApiPublicHooksInstitutionRequestsRoute
   ApiPublicHooksRemindersRoute: typeof ApiPublicHooksRemindersRoute
 }
 
@@ -392,6 +406,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBooksScanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/hooks/institution-requests': {
+      id: '/api/public/hooks/institution-requests'
+      path: '/api/public/hooks/institution-requests'
+      fullPath: '/api/public/hooks/institution-requests'
+      preLoaderRoute: typeof ApiPublicHooksInstitutionRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/reminders': {
       id: '/api/public/hooks/reminders'
       path: '/api/public/hooks/reminders'
@@ -448,6 +469,8 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingMinisterRoute: OnboardingMinisterRoute,
   OnboardingRoleSelectRoute: OnboardingRoleSelectRoute,
   OnboardingStudentRoute: OnboardingStudentRoute,
+  ApiPublicHooksInstitutionRequestsRoute:
+    ApiPublicHooksInstitutionRequestsRoute,
   ApiPublicHooksRemindersRoute: ApiPublicHooksRemindersRoute,
 }
 export const routeTree = rootRouteImport
