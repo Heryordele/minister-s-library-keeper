@@ -52,6 +52,9 @@ import {
 } from "@/lib/reading";
 
 export const Route = createFileRoute("/_authenticated/reading")({
+  // ?view=goals shows the goals & streak view to users who have a role dashboard.
+  validateSearch: (search: Record<string, unknown>): { view?: "goals" } =>
+    search.view === "goals" ? { view: "goals" } : {},
   head: () => ({
     meta: [
       { title: "Reading — Minister's Vault" },
@@ -72,6 +75,7 @@ export const Route = createFileRoute("/_authenticated/reading")({
 function ReadingPage() {
   const qc = useQueryClient();
   const { role, loading: roleLoading } = useUserRole();
+  const { view } = Route.useSearch();
 
   const { data: goals, isLoading } = useQuery({
     queryKey: readingGoalsKey,
@@ -104,7 +108,7 @@ function ReadingPage() {
   });
 
   // Show role-specific dashboard if role is available
-  if (!roleLoading && role) {
+  if (!roleLoading && role && view !== "goals") {
     const pageTitle = {
       minister: "Your Pastoral Library",
       student: "Your Reading Goals",
@@ -140,7 +144,16 @@ function ReadingPage() {
       <PageHeader
         title="Reading dashboard"
         subtitle="Your goals, streaks, and daily discipline."
-        actions={hasNoLibrary ? undefined : <ReadingGoalDialog />}
+        actions={
+          <>
+            {role && (
+              <Button asChild variant="ghost">
+                <Link to="/reading">Back to dashboard</Link>
+              </Button>
+            )}
+            {!hasNoLibrary && <ReadingGoalDialog />}
+          </>
+        }
       />
 
       {hasNoLibrary ? (

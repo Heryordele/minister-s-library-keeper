@@ -86,9 +86,9 @@ export function InstitutionDashboard() {
             </div>
             <Settings className="h-6 w-6 text-slate-400" />
           </div>
-          <Link to="/admin">
+          <Link to="/account">
             <Button variant="outline" size="sm" className="w-full text-xs">
-              Admin Panel
+              Institution settings
             </Button>
           </Link>
         </div>
@@ -105,12 +105,14 @@ export function InstitutionDashboard() {
               📱 Add Books
             </Button>
           </Link>
-          <Button variant="secondary" className="w-full justify-start text-sm">
-            👥 Manage Users
+          <Button variant="secondary" className="w-full justify-start text-sm" disabled>
+            👥 Manage Users (coming soon)
           </Button>
-          <Button variant="secondary" className="w-full justify-start text-sm">
-            📊 View Reports
-          </Button>
+          <Link to="/analytics">
+            <Button variant="secondary" className="w-full justify-start text-sm">
+              📊 View Reports
+            </Button>
+          </Link>
         </div>
       </div>
 
