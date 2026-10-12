@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { requestInstitutionAccess } from "@/lib/institution-request";
 import { Button } from "@/components/ui/button";
 import { Loader2, BookOpen, Users, Building2 } from "lucide-react";
 import { toast } from "sonner";
@@ -31,14 +32,18 @@ function RoleSelectPage() {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user?.id) throw new Error("Not authenticated");
 
-      // Insert role into user_roles table
-      const { error } = await supabase.from("user_roles").insert({
-        user_id: user.user.id,
-        role: selectedRole,
-      });
+      if (selectedRole === "institution_admin") {
+        // Institution accounts need approval; file a request instead of the role.
+        await requestInstitutionAccess(user.user.id);
+      } else {
+        const { error } = await supabase.from("user_roles").insert({
+          user_id: user.user.id,
+          role: selectedRole,
+        });
 
-      // 23505 = unique violation: the user already has this role, which is fine.
-      if (error && error.code !== "23505") throw error;
+        // 23505 = unique violation: the user already has this role, which is fine.
+        if (error && error.code !== "23505") throw error;
+      }
 
       // Redirect to role-specific onboarding
       const onboardingRoutes = {
@@ -74,7 +79,7 @@ function RoleSelectPage() {
       title: "Institution/Seminary",
       description: "Manage institutional library and multi-user access",
       icon: Building2,
-      highlight: "Shared library, reporting, and user management",
+      highlight: "Requires approval before the institution dashboard unlocks",
     },
   ];
 

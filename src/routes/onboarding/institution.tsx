@@ -45,7 +45,7 @@ function InstitutionOnboarding() {
 
       if (error) throw error;
 
-      toast.success("Institution setup complete! Invite your team to get started.");
+      toast.success("Request submitted. We'll review your institution account shortly.");
       navigate({ to: "/reading", replace: true });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Setup failed");
