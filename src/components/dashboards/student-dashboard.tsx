@@ -47,7 +47,7 @@ export function StudentDashboard() {
             </div>
             <Target className="h-8 w-8 text-blue-600" />
           </div>
-          <Link to="/goals">
+          <Link to="/reading" search={{ view: "goals" }}>
             <Button variant="outline" size="sm" className="w-full">
               Manage Goals
             </Button>
@@ -79,7 +79,7 @@ export function StudentDashboard() {
             </div>
             <BookOpen className="h-8 w-8 text-amber-600" />
           </div>
-          <Link to="/books">
+          <Link to="/library">
             <Button variant="outline" size="sm" className="w-full">
               View Library
             </Button>
@@ -96,7 +96,7 @@ export function StudentDashboard() {
               📱 Scan ISBN
             </Button>
           </Link>
-          <Link to="/books/new">
+          <Link to="/books/new" search={{ isbn: undefined }}>
             <Button variant="secondary" className="w-full justify-start">
               ➕ Add Manually
             </Button>

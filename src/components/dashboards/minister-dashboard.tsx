@@ -44,7 +44,7 @@ export function MinisterDashboard() {
             </div>
             <BookOpen className="h-8 w-8 text-amber-600" />
           </div>
-          <Link to="/books">
+          <Link to="/library">
             <Button variant="outline" size="sm" className="w-full">
               View Library
             </Button>
@@ -61,7 +61,7 @@ export function MinisterDashboard() {
                   📱 Scan Barcode
                 </Button>
               </Link>
-              <Link to="/books/new">
+              <Link to="/books/new" search={{ isbn: undefined }}>
                 <Button variant="secondary" size="sm" className="w-full justify-start">
                   ➕ Add Book
                 </Button>
