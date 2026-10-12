@@ -66,6 +66,11 @@ export function MinisterDashboard() {
                   ➕ Add Book
                 </Button>
               </Link>
+              <Link to="/reading" search={{ view: "goals" }}>
+                <Button variant="secondary" size="sm" className="w-full justify-start">
+                  🎯 Reading goals & streaks
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
