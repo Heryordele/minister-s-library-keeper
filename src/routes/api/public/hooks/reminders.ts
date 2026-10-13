@@ -48,11 +48,11 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        // Fallback for institution request and approval emails the triggers missed.
-        const { sendInstitutionRequestAlerts, sendInstitutionApprovalEmails } =
+        // Fallback for institution request and decision emails the triggers missed.
+        const { sendInstitutionRequestAlerts, sendInstitutionDecisionEmails } =
           await import("@/lib/institution-alerts.server");
         await sendInstitutionRequestAlerts();
-        await sendInstitutionApprovalEmails(new URL(request.url).origin);
+        await sendInstitutionDecisionEmails(new URL(request.url).origin);
 
         const now = startOfDay(new Date());
         const stamp = now.toISOString().slice(0, 10);

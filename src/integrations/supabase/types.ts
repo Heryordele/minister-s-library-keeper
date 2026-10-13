@@ -171,6 +171,7 @@ export type Database = {
           created_at: string
           id: string
           notified_at: string | null
+          rejection_notified_at: string | null
           reviewed_at: string | null
           status: string
           user_id: string
@@ -180,6 +181,7 @@ export type Database = {
           created_at?: string
           id?: string
           notified_at?: string | null
+          rejection_notified_at?: string | null
           reviewed_at?: string | null
           status?: string
           user_id: string
@@ -189,6 +191,7 @@ export type Database = {
           created_at?: string
           id?: string
           notified_at?: string | null
+          rejection_notified_at?: string | null
           reviewed_at?: string | null
           status?: string
           user_id?: string
