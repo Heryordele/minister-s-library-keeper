@@ -167,6 +167,7 @@ export type Database = {
       }
       institution_requests: {
         Row: {
+          approval_notified_at: string | null
           created_at: string
           id: string
           notified_at: string | null
@@ -175,6 +176,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approval_notified_at?: string | null
           created_at?: string
           id?: string
           notified_at?: string | null
@@ -183,6 +185,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approval_notified_at?: string | null
           created_at?: string
           id?: string
           notified_at?: string | null

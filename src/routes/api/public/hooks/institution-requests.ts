@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
- * Pinged by a database trigger when an institution admin request is filed.
- * Emails the project owner about any pending requests not yet announced.
- * The daily reminders sweep runs the same check as a fallback.
+ * Pinged by database triggers when an institution admin request is filed or
+ * approved. Emails the project owner about new requests and each approved
+ * requester about their approval. The daily reminders sweep runs the same
+ * checks as a fallback.
  */
 export const Route = createFileRoute("/api/public/hooks/institution-requests")({
   server: {
@@ -20,9 +21,16 @@ export const Route = createFileRoute("/api/public/hooks/institution-requests")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { sendInstitutionRequestAlerts } = await import("@/lib/institution-alerts.server");
-        const result = await sendInstitutionRequestAlerts();
-        return Response.json({ success: !result.error, ...result });
+        const { sendInstitutionRequestAlerts, sendInstitutionApprovalEmails } =
+          await import("@/lib/institution-alerts.server");
+        const alerts = await sendInstitutionRequestAlerts();
+        const approvals = await sendInstitutionApprovalEmails(new URL(request.url).origin);
+        return Response.json({
+          success: !alerts.error && !approvals.error,
+          alerted: alerts.alerted,
+          approvalsEmailed: approvals.emailed,
+          errors: [alerts.error, approvals.error].filter(Boolean),
+        });
       },
     },
   },
