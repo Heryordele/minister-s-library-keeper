@@ -25,6 +25,7 @@ import { Route as OnboardingInstitutionRouteImport } from './routes/onboarding/i
 import { Route as OnboardingMinisterRouteImport } from './routes/onboarding/minister'
 import { Route as OnboardingRoleSelectRouteImport } from './routes/onboarding/role-select'
 import { Route as OnboardingStudentRouteImport } from './routes/onboarding/student'
+import { Route as AuthenticatedAdminUserIdRouteImport } from './routes/_authenticated/admin.$userId'
 import { Route as AuthenticatedBooksBookIdRouteImport } from './routes/_authenticated/books.$bookId'
 import { Route as AuthenticatedBooksImportRouteImport } from './routes/_authenticated/books.import'
 import { Route as AuthenticatedBooksNewRouteImport } from './routes/_authenticated/books.new'
@@ -111,6 +112,12 @@ const OnboardingStudentRoute = OnboardingStudentRouteImport.update({
   path: '/student',
   getParentRoute: () => OnboardingRouteRoute,
 } as any)
+const AuthenticatedAdminUserIdRoute =
+  AuthenticatedAdminUserIdRouteImport.update({
+    id: '/$userId',
+    path: '/$userId',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedBooksBookIdRoute =
   AuthenticatedBooksBookIdRouteImport.update({
     id: '/books/$bookId',
@@ -151,7 +158,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/account': typeof AuthenticatedAccountRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/lending': typeof AuthenticatedLendingRoute
   '/library': typeof AuthenticatedLibraryRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/minister': typeof OnboardingMinisterRoute
   '/onboarding/role-select': typeof OnboardingRoleSelectRoute
   '/onboarding/student': typeof OnboardingStudentRoute
+  '/admin/$userId': typeof AuthenticatedAdminUserIdRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/books/import': typeof AuthenticatedBooksImportRoute
   '/books/new': typeof AuthenticatedBooksNewRoute
@@ -174,7 +182,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/account': typeof AuthenticatedAccountRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/lending': typeof AuthenticatedLendingRoute
   '/library': typeof AuthenticatedLibraryRoute
@@ -184,6 +192,7 @@ export interface FileRoutesByTo {
   '/onboarding/minister': typeof OnboardingMinisterRoute
   '/onboarding/role-select': typeof OnboardingRoleSelectRoute
   '/onboarding/student': typeof OnboardingStudentRoute
+  '/admin/$userId': typeof AuthenticatedAdminUserIdRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/books/import': typeof AuthenticatedBooksImportRoute
   '/books/new': typeof AuthenticatedBooksNewRoute
@@ -199,7 +208,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/lending': typeof AuthenticatedLendingRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
@@ -209,6 +218,7 @@ export interface FileRoutesById {
   '/onboarding/minister': typeof OnboardingMinisterRoute
   '/onboarding/role-select': typeof OnboardingRoleSelectRoute
   '/onboarding/student': typeof OnboardingStudentRoute
+  '/_authenticated/admin/$userId': typeof AuthenticatedAdminUserIdRoute
   '/_authenticated/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/_authenticated/books/import': typeof AuthenticatedBooksImportRoute
   '/_authenticated/books/new': typeof AuthenticatedBooksNewRoute
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/onboarding/minister'
     | '/onboarding/role-select'
     | '/onboarding/student'
+    | '/admin/$userId'
     | '/books/$bookId'
     | '/books/import'
     | '/books/new'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/onboarding/minister'
     | '/onboarding/role-select'
     | '/onboarding/student'
+    | '/admin/$userId'
     | '/books/$bookId'
     | '/books/import'
     | '/books/new'
@@ -281,6 +293,7 @@ export interface FileRouteTypes {
     | '/onboarding/minister'
     | '/onboarding/role-select'
     | '/onboarding/student'
+    | '/_authenticated/admin/$userId'
     | '/_authenticated/books/$bookId'
     | '/_authenticated/books/import'
     | '/_authenticated/books/new'
@@ -414,6 +427,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingStudentRouteImport
       parentRoute: typeof OnboardingRouteRoute
     }
+    '/_authenticated/admin/$userId': {
+      id: '/_authenticated/admin/$userId'
+      path: '/$userId'
+      fullPath: '/admin/$userId'
+      preLoaderRoute: typeof AuthenticatedAdminUserIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/books/$bookId': {
       id: '/_authenticated/books/$bookId'
       path: '/books/$bookId'
@@ -459,9 +479,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminUserIdRoute: typeof AuthenticatedAdminUserIdRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminUserIdRoute: AuthenticatedAdminUserIdRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedLendingRoute: typeof AuthenticatedLendingRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
@@ -474,7 +505,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedLendingRoute: AuthenticatedLendingRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
