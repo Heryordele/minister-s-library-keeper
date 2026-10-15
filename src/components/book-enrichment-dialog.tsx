@@ -37,7 +37,7 @@ export function BookEnrichmentDialog({
   const handleLookup = async () => {
     try {
       setLoading(true);
-      const result = await lookup(isbn);
+      const result = await lookup({ data: isbn });
 
       if (!result.success || !result.data) {
         toast.error(result.error || "Failed to look up book");

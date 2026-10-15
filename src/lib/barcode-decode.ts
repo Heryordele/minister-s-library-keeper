@@ -8,7 +8,7 @@ const SIZES = [2000, 1000] as const;
 const ROTATIONS = [0, 90, 270] as const;
 const CONTRAST = 1.8;
 
-function barcodeHints() {
+export function barcodeHints() {
   const hints = new Map();
   // ISBN barcodes first, then the other common book-label formats.
   hints.set(DecodeHintType.POSSIBLE_FORMATS, [
