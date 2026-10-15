@@ -6,21 +6,6 @@ type Pending = {
   message: string;
 };
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-function startOfDay(value: string | Date): Date {
-  const d =
-    typeof value === "string"
-      ? new Date(value.length > 10 ? value : `${value}T00:00:00`)
-      : new Date(value);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function daysBetween(from: Date, to: Date): number {
-  return Math.round((to.getTime() - from.getTime()) / DAY_MS);
-}
-
 const SUBJECT_BY_TYPE: Record<Pending["type"], string> = {
   lending_reminder: "A book is due back soon — Minister's Vault",
   overdue: "A borrowed book is overdue — Minister's Vault",
@@ -54,8 +39,6 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
         await sendInstitutionRequestAlerts();
         await sendInstitutionDecisionEmails(new URL(request.url).origin);
 
-        const now = startOfDay(new Date());
-        const stamp = now.toISOString().slice(0, 10);
         const pending: Pending[] = [];
 
         // --- Lending reminders -------------------------------------------
@@ -64,8 +47,17 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
         const lending = await sendLendingReminders();
 
         // --- Habit nudges --------------------------------------------------
-        const { data: goals } = await supabaseAdmin.from("reading_goals").select("user_id");
-        const goalUsers = [...new Set((goals ?? []).map((g) => g.user_id))];
+        // Day 1, 3 and 7 of inactivity only (PRD FR-014), for readers with a goal.
+        const { habitNudgeFor } = await import("@/lib/habit-nudges");
+        const { data: goals } = await supabaseAdmin
+          .from("reading_goals")
+          .select("user_id, created_at");
+        const firstGoalByUser = new Map<string, string>();
+        for (const g of goals ?? []) {
+          const prev = firstGoalByUser.get(g.user_id);
+          if (!prev || g.created_at < prev) firstGoalByUser.set(g.user_id, g.created_at);
+        }
+        const goalUsers = [...firstGoalByUser.keys()];
 
         if (goalUsers.length > 0) {
           const { data: entries } = await supabaseAdmin
@@ -79,29 +71,14 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
             if (!lastByUser.has(e.user_id)) lastByUser.set(e.user_id, e.logged_at);
           }
 
+          const today = new Date();
           for (const userId of goalUsers) {
             const last = lastByUser.get(userId);
-            const daysSince = last ? daysBetween(startOfDay(last), now) : null;
-
-            if (daysSince === null || daysSince >= 7) {
-              pending.push({
-                user_id: userId,
-                type: "habit_nudge",
-                message: `Your books are waiting patiently. Even ten minutes today would begin a fresh rhythm — open one and read a page. (${stamp})`,
-              });
-            } else if (daysSince >= 3) {
-              pending.push({
-                user_id: userId,
-                type: "habit_nudge",
-                message: `It's been ${daysSince} days since your last entry — your streak is resting, not lost. One short reading today brings it back. (${stamp})`,
-              });
-            } else if (daysSince >= 1) {
-              pending.push({
-                user_id: userId,
-                type: "habit_nudge",
-                message: `No reading logged yet today. A few faithful pages now keep your goal moving steadily forward. (${stamp})`,
-              });
-            }
+            const nudge = last
+              ? habitNudgeFor(last, today)
+              : habitNudgeFor(firstGoalByUser.get(userId)!, today, "Goal set");
+            if (nudge)
+              pending.push({ user_id: userId, type: "habit_nudge", message: nudge.message });
           }
         }
 
