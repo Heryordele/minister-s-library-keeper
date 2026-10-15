@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
+import { useLiveUpdates } from "@/lib/live-updates";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -13,6 +14,9 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
+  const { user } = Route.useRouteContext();
+  useLiveUpdates(user.id);
+
   return (
     <AppShell>
       <Outlet />
