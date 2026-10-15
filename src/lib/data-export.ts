@@ -68,6 +68,18 @@ export async function fetchDataExport(): Promise<ReturnType<typeof buildDataExpo
   return buildDataExport(sources, new Date());
 }
 
+/** Remembers when the user last exported. Institution accounts need this before they can delete. */
+export async function recordExport(): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return;
+  const { error } = await supabase
+    .from("profiles")
+    .update({ last_exported_at: new Date().toISOString() })
+    .eq("id", userId);
+  if (error) throw error;
+}
+
 /** Saves the export as a JSON file through the browser's download. */
 export function downloadDataExport(data: ReturnType<typeof buildDataExport>): void {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });

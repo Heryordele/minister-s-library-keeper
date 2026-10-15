@@ -93,6 +93,7 @@ export type Database = {
           borrower_name: string
           borrower_organization: string | null
           borrower_phone: string | null
+          cleared_at: string | null
           created_at: string
           date_borrowed: string
           expected_return_date: string | null
@@ -108,6 +109,7 @@ export type Database = {
           borrower_name: string
           borrower_organization?: string | null
           borrower_phone?: string | null
+          cleared_at?: string | null
           created_at?: string
           date_borrowed?: string
           expected_return_date?: string | null
@@ -119,6 +121,7 @@ export type Database = {
         Update: {
           actual_return_date?: string | null
           book_id?: string
+          cleared_at?: string | null
           borrower_email?: string | null
           borrower_name?: string
           borrower_organization?: string | null
@@ -264,6 +267,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          last_exported_at: string | null
           library_name: string | null
           name: string | null
           organization_name: string | null
@@ -276,6 +280,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
+          last_exported_at?: string | null
           library_name?: string | null
           name?: string | null
           organization_name?: string | null
@@ -288,6 +293,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          last_exported_at?: string | null
           library_name?: string | null
           name?: string | null
           organization_name?: string | null

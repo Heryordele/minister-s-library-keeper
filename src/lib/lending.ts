@@ -23,7 +23,9 @@ export function isOverdue(record: BorrowRecord): boolean {
   return due.getTime() < Date.now();
 }
 
-export function effectiveStatus(record: BorrowRecord): "borrowed" | "overdue" | "returned" | "lost" {
+export function effectiveStatus(
+  record: BorrowRecord,
+): "borrowed" | "overdue" | "returned" | "lost" {
   if (isOverdue(record)) return "overdue";
   return record.status;
 }
@@ -37,13 +39,48 @@ export function formatDate(value: string | null): string {
   });
 }
 
+export const clearedRecordsKey = ["borrow_records", "cleared"] as const;
+
+/** Records still in use. Cleared records are hidden until they are purged. */
 export async function fetchBorrowRecords(): Promise<BorrowRecordWithBook[]> {
   const { data, error } = await supabase
     .from("borrow_records")
     .select("*, books(id, title, author)")
+    .is("cleared_at", null)
     .order("date_borrowed", { ascending: false });
   if (error) throw error;
   return (data ?? []) as BorrowRecordWithBook[];
+}
+
+/** Cleared records, most recently cleared first. They can be restored until purged. */
+export async function fetchClearedRecords(): Promise<BorrowRecordWithBook[]> {
+  const { data, error } = await supabase
+    .from("borrow_records")
+    .select("*, books(id, title, author)")
+    .not("cleared_at", "is", null)
+    .order("cleared_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as BorrowRecordWithBook[];
+}
+
+/** Hides every returned or lost record. They stay restorable for 90 days. */
+export async function clearFinishedRecords(): Promise<number> {
+  const { data, error } = await supabase
+    .from("borrow_records")
+    .update({ cleared_at: new Date().toISOString() })
+    .in("status", ["returned", "lost"])
+    .is("cleared_at", null)
+    .select("id");
+  if (error) throw error;
+  return data?.length ?? 0;
+}
+
+export async function restoreRecord(recordId: string): Promise<void> {
+  const { error } = await supabase
+    .from("borrow_records")
+    .update({ cleared_at: null })
+    .eq("id", recordId);
+  if (error) throw error;
 }
 
 export async function fetchActiveLoan(bookId: string): Promise<BorrowRecord | null> {
@@ -165,9 +202,7 @@ export type BorrowerHistory = {
 };
 
 /** Groups every loan ever made by the person who borrowed it. */
-export function groupByBorrower(
-  records: BorrowRecordWithBook[],
-): BorrowerHistory[] {
+export function groupByBorrower(records: BorrowRecordWithBook[]): BorrowerHistory[] {
   const map = new Map<string, BorrowerHistory>();
   for (const r of records) {
     const key = `${r.borrower_name.trim().toLowerCase()}|${(r.borrower_email ?? "").trim().toLowerCase()}`;
@@ -193,9 +228,7 @@ export function groupByBorrower(
   for (const b of list) {
     b.outstanding = b.records.filter((r) => r.status === "borrowed").length;
   }
-  return list.sort(
-    (a, b) => b.outstanding - a.outstanding || a.name.localeCompare(b.name),
-  );
+  return list.sort((a, b) => b.outstanding - a.outstanding || a.name.localeCompare(b.name));
 }
 
 const CSV_HEADERS = [
