@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Loader2, PackageX, Undo2, Users } from "lucide-react";
+import { Archive, Download, Loader2, PackageX, Undo2, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { ExtendLoanDialog } from "@/components/extend-loan-dialog";
@@ -11,13 +11,17 @@ import { Badge } from "@/components/ui/badge";
 import { booksKey } from "@/lib/books";
 import {
   borrowRecordsKey,
+  clearedRecordsKey,
+  clearFinishedRecords,
   downloadLendingCsv,
   effectiveStatus,
   fetchBorrowRecords,
+  fetchClearedRecords,
   formatDate,
   groupByBorrower,
   markLost,
   markReturned,
+  restoreRecord,
   syncOverdueBooks,
   type BorrowRecordWithBook,
 } from "@/lib/lending";
@@ -48,6 +52,10 @@ function LendingPage() {
     queryKey: borrowRecordsKey,
     queryFn: fetchBorrowRecords,
   });
+  const { data: cleared } = useQuery({
+    queryKey: clearedRecordsKey,
+    queryFn: fetchClearedRecords,
+  });
 
   useEffect(() => {
     if (!records?.length) return;
@@ -71,32 +79,50 @@ function LendingPage() {
   }, [records]);
 
   const total = (records ?? []).length;
+  const finishedCount = (records ?? []).filter(
+    (r) => r.status === "returned" || r.status === "lost",
+  ).length;
   const borrowers = useMemo(() => groupByBorrower(records ?? []), [records]);
 
+  const clearFinished = useMutation({
+    mutationFn: clearFinishedRecords,
+    onSuccess: (count) => {
+      qc.invalidateQueries({ queryKey: borrowRecordsKey });
+      toast.success(
+        `Cleared ${count} ${count === 1 ? "record" : "records"}. They can be restored for 90 days.`,
+      );
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not clear these records."),
+  });
+
+  const restore = useMutation({
+    mutationFn: (id: string) => restoreRecord(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: borrowRecordsKey });
+      toast.success("Record restored.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not restore this record."),
+  });
+
   const returnLoan = useMutation({
-    mutationFn: ({ id, bookId }: { id: string; bookId: string }) =>
-      markReturned(id, bookId),
+    mutationFn: ({ id, bookId }: { id: string; bookId: string }) => markReturned(id, bookId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: borrowRecordsKey });
       qc.invalidateQueries({ queryKey: booksKey });
       toast.success("Book marked as returned.");
     },
     onError: (e) =>
-      toast.error(
-        e instanceof Error ? e.message : "Could not mark this book returned.",
-      ),
+      toast.error(e instanceof Error ? e.message : "Could not mark this book returned."),
   });
 
   const reportLost = useMutation({
-    mutationFn: ({ id, bookId }: { id: string; bookId: string }) =>
-      markLost(bookId, id),
+    mutationFn: ({ id, bookId }: { id: string; bookId: string }) => markLost(bookId, id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: borrowRecordsKey });
       qc.invalidateQueries({ queryKey: booksKey });
       toast.success("Book marked as lost.");
     },
-    onError: (e) =>
-      toast.error(e instanceof Error ? e.message : "Could not mark this book lost."),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not mark this book lost."),
   });
 
   return (
@@ -106,13 +132,25 @@ function LendingPage() {
         subtitle="Who has your books — and when they're due home."
         actions={
           total > 0 ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => downloadLendingCsv(records ?? [])}
-            >
-              <Download className="mr-2 h-4 w-4" /> Export records
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {finishedCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={clearFinished.isPending}
+                  onClick={() => clearFinished.mutate()}
+                >
+                  <Archive className="mr-2 h-4 w-4" /> Clear finished
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadLendingCsv([...(records ?? []), ...(cleared ?? [])])}
+              >
+                <Download className="mr-2 h-4 w-4" /> Export records
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -121,7 +159,7 @@ function LendingPage() {
           <div className="grid place-items-center py-20">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
-        ) : total === 0 ? (
+        ) : total === 0 && (cleared ?? []).length === 0 ? (
           <EmptyState
             icon={<Users className="h-6 w-6" />}
             title="No books out on loan"
@@ -165,9 +203,7 @@ function LendingPage() {
                           </Link>
                           <p className="mt-0.5 text-sm text-muted-foreground">
                             Lent to {r.borrower_name}
-                            {r.borrower_organization
-                              ? ` · ${r.borrower_organization}`
-                              : ""}
+                            {r.borrower_organization ? ` · ${r.borrower_organization}` : ""}
                           </p>
                           <p className="mt-1 text-xs text-muted-foreground">
                             Borrowed {formatDate(r.date_borrowed)} · Due{" "}
@@ -190,9 +226,7 @@ function LendingPage() {
                               variant="outline"
                               size="sm"
                               disabled={returnLoan.isPending}
-                              onClick={() =>
-                                returnLoan.mutate({ id: r.id, bookId: r.book_id })
-                              }
+                              onClick={() => returnLoan.mutate({ id: r.id, bookId: r.book_id })}
                             >
                               <Undo2 className="mr-2 h-4 w-4" /> Mark as returned
                             </Button>
@@ -200,9 +234,7 @@ function LendingPage() {
                               variant="ghost"
                               size="sm"
                               disabled={reportLost.isPending}
-                              onClick={() =>
-                                reportLost.mutate({ id: r.id, bookId: r.book_id })
-                              }
+                              onClick={() => reportLost.mutate({ id: r.id, bookId: r.book_id })}
                             >
                               <PackageX className="mr-2 h-4 w-4" /> Mark as lost
                             </Button>
@@ -214,6 +246,44 @@ function LendingPage() {
                 )}
               </section>
             ))}
+
+            {(cleared ?? []).length > 0 && (
+              <section>
+                <div className="mb-1 flex items-center gap-2">
+                  <h2 className="font-serif text-lg font-semibold">Cleared</h2>
+                  <Badge variant="secondary">{(cleared ?? []).length}</Badge>
+                </div>
+                <p className="mb-3 text-sm text-muted-foreground">
+                  Hidden from your lists. Restore a record to bring it back, or it is removed for
+                  good 90 days after it was cleared.
+                </p>
+                <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+                  {(cleared ?? []).map((r) => (
+                    <li
+                      key={r.id}
+                      className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-serif font-semibold">
+                          {r.books?.title ?? "Untitled book"}
+                        </p>
+                        <p className="mt-0.5 text-sm text-muted-foreground">
+                          Lent to {r.borrower_name} · {r.status === "lost" ? "Lost" : "Returned"}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={restore.isPending}
+                        onClick={() => restore.mutate(r.id)}
+                      >
+                        <Undo2 className="mr-2 h-4 w-4" /> Restore
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <section>
               <div className="mb-3 flex items-center gap-2">
@@ -227,13 +297,10 @@ function LendingPage() {
                       <summary className="flex cursor-pointer flex-wrap items-center gap-2">
                         <span className="font-serif font-semibold">{b.name}</span>
                         {b.organization && (
-                          <span className="text-sm text-muted-foreground">
-                            · {b.organization}
-                          </span>
+                          <span className="text-sm text-muted-foreground">· {b.organization}</span>
                         )}
                         <span className="ml-auto text-xs text-muted-foreground">
-                          {b.records.length}{" "}
-                          {b.records.length === 1 ? "loan" : "loans"}
+                          {b.records.length} {b.records.length === 1 ? "loan" : "loans"}
                           {b.outstanding > 0 ? ` · ${b.outstanding} still out` : ""}
                         </span>
                       </summary>
@@ -255,9 +322,7 @@ function LendingPage() {
                             <span className="text-muted-foreground">
                               {" "}
                               — {formatDate(r.date_borrowed)} ·{" "}
-                              <span className="capitalize">
-                                {effectiveStatus(r)}
-                              </span>
+                              <span className="capitalize">{effectiveStatus(r)}</span>
                             </span>
                           </li>
                         ))}

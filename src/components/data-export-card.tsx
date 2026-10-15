@@ -3,7 +3,7 @@ import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { downloadDataExport, fetchDataExport } from "@/lib/data-export";
+import { downloadDataExport, fetchDataExport, recordExport } from "@/lib/data-export";
 
 export function DataExportCard() {
   const [busy, setBusy] = useState(false);
@@ -13,6 +13,7 @@ export function DataExportCard() {
     try {
       const data = await fetchDataExport();
       downloadDataExport(data);
+      await recordExport();
       toast.success("Your data is downloading.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not export your data.");

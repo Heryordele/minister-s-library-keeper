@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { SignOutButton } from "@/components/app-shell";
 import { DataExportCard } from "@/components/data-export-card";
+import { DeleteAccountCard } from "@/components/delete-account-card";
 import { StreakBadges } from "@/components/streak-badges";
 import { fetchStreak, liveStreakDays, readingStreakKey } from "@/lib/reading";
 import { Badge } from "@/components/ui/badge";
@@ -146,6 +147,8 @@ function AccountPage() {
             )}
 
             <DataExportCard />
+
+            <DeleteAccountCard />
 
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
               <h2 className="text-base font-semibold">Session</h2>
