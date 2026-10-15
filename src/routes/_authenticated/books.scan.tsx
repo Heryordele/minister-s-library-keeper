@@ -104,7 +104,9 @@ function ScanPage() {
       }
       setStage({ kind: "confirm", result });
     } catch (e) {
-      toast.error("Failed to look up ISBN. Try adding manually.");
+      // Show the real reason on screen, so the cause can be found from a phone.
+      const reason = e instanceof Error ? e.message : String(e);
+      toast.error(`Failed to look up ISBN: ${reason}`);
       navigate({ to: "/books/new", search: { isbn } });
     }
   }
