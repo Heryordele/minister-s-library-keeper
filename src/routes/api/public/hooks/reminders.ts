@@ -6,21 +6,6 @@ type Pending = {
   message: string;
 };
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-function startOfDay(value: string | Date): Date {
-  const d =
-    typeof value === "string"
-      ? new Date(value.length > 10 ? value : `${value}T00:00:00`)
-      : new Date(value);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function daysBetween(from: Date, to: Date): number {
-  return Math.round((to.getTime() - from.getTime()) / DAY_MS);
-}
-
 const SUBJECT_BY_TYPE: Record<Pending["type"], string> = {
   lending_reminder: "A book is due back soon — Minister's Vault",
   overdue: "A borrowed book is overdue — Minister's Vault",
@@ -48,56 +33,31 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        // Fallback for institution request and approval emails the triggers missed.
-        const { sendInstitutionRequestAlerts, sendInstitutionApprovalEmails } =
+        // Fallback for institution request and decision emails the triggers missed.
+        const { sendInstitutionRequestAlerts, sendInstitutionDecisionEmails } =
           await import("@/lib/institution-alerts.server");
         await sendInstitutionRequestAlerts();
-        await sendInstitutionApprovalEmails(new URL(request.url).origin);
+        await sendInstitutionDecisionEmails(new URL(request.url).origin);
 
-        const now = startOfDay(new Date());
-        const stamp = now.toISOString().slice(0, 10);
         const pending: Pending[] = [];
 
         // --- Lending reminders -------------------------------------------
-        const { data: loans, error: loansError } = await supabaseAdmin
-          .from("borrow_records")
-          .select("owner_id, borrower_name, expected_return_date, books(title)")
-          .eq("status", "borrowed")
-          .not("expected_return_date", "is", null);
-        if (loansError) {
-          return Response.json({ error: loansError.message }, { status: 500 });
-        }
-
-        for (const loan of loans ?? []) {
-          const ownerId = loan.owner_id;
-          const due = startOfDay(loan.expected_return_date as string);
-          const daysLeft = daysBetween(now, due);
-          const title = (loan.books as { title: string } | null)?.title ?? "A book";
-          const dueLabel = due.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          });
-
-          if (daysLeft === 3) {
-            pending.push({
-              user_id: ownerId,
-              type: "lending_reminder",
-              message: `“${title}” is due back from ${loan.borrower_name} on ${dueLabel} — three days to go. A gentle reminder now usually does the trick.`,
-            });
-          }
-          if (daysLeft < 0) {
-            pending.push({
-              user_id: ownerId,
-              type: "overdue",
-              message: `“${title}” was due back from ${loan.borrower_name} on ${dueLabel} and hasn't returned yet. Worth a friendly follow-up.`,
-            });
-          }
-        }
+        // Owner and borrower reminders, overdue flags and their send log.
+        const { sendLendingReminders } = await import("@/lib/lending-reminders.server");
+        const lending = await sendLendingReminders();
 
         // --- Habit nudges --------------------------------------------------
-        const { data: goals } = await supabaseAdmin.from("reading_goals").select("user_id");
-        const goalUsers = [...new Set((goals ?? []).map((g) => g.user_id))];
+        // Day 1, 3 and 7 of inactivity only (PRD FR-014), for readers with a goal.
+        const { habitNudgeFor } = await import("@/lib/habit-nudges");
+        const { data: goals } = await supabaseAdmin
+          .from("reading_goals")
+          .select("user_id, created_at");
+        const firstGoalByUser = new Map<string, string>();
+        for (const g of goals ?? []) {
+          const prev = firstGoalByUser.get(g.user_id);
+          if (!prev || g.created_at < prev) firstGoalByUser.set(g.user_id, g.created_at);
+        }
+        const goalUsers = [...firstGoalByUser.keys()];
 
         if (goalUsers.length > 0) {
           const { data: entries } = await supabaseAdmin
@@ -111,34 +71,19 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
             if (!lastByUser.has(e.user_id)) lastByUser.set(e.user_id, e.logged_at);
           }
 
+          const today = new Date();
           for (const userId of goalUsers) {
             const last = lastByUser.get(userId);
-            const daysSince = last ? daysBetween(startOfDay(last), now) : null;
-
-            if (daysSince === null || daysSince >= 7) {
-              pending.push({
-                user_id: userId,
-                type: "habit_nudge",
-                message: `Your books are waiting patiently. Even ten minutes today would begin a fresh rhythm — open one and read a page. (${stamp})`,
-              });
-            } else if (daysSince >= 3) {
-              pending.push({
-                user_id: userId,
-                type: "habit_nudge",
-                message: `It's been ${daysSince} days since your last entry — your streak is resting, not lost. One short reading today brings it back. (${stamp})`,
-              });
-            } else if (daysSince >= 1) {
-              pending.push({
-                user_id: userId,
-                type: "habit_nudge",
-                message: `No reading logged yet today. A few faithful pages now keep your goal moving steadily forward. (${stamp})`,
-              });
-            }
+            const nudge = last
+              ? habitNudgeFor(last, today)
+              : habitNudgeFor(firstGoalByUser.get(userId)!, today, "Goal set");
+            if (nudge)
+              pending.push({ user_id: userId, type: "habit_nudge", message: nudge.message });
           }
         }
 
         if (pending.length === 0) {
-          return Response.json({ success: true, created: 0 });
+          return Response.json({ success: true, created: 0, lending });
         }
 
         // De-duplicate against notifications this user already has.
@@ -150,7 +95,7 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
 
         const fresh = pending.filter((p) => !seen.has(`${p.user_id}::${p.message}`));
         if (fresh.length === 0) {
-          return Response.json({ success: true, created: 0, emailed: 0 });
+          return Response.json({ success: true, created: 0, emailed: 0, lending });
         }
 
         // Look up each recipient's email once before sending.
@@ -198,7 +143,7 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
           return Response.json({ error: error.message }, { status: 500 });
         }
 
-        return Response.json({ success: true, created: rows.length, emailed });
+        return Response.json({ success: true, created: rows.length, emailed, lending });
       },
     },
   },

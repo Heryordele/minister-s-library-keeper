@@ -74,70 +74,109 @@ export async function sendInstitutionRequestAlerts(): Promise<{ alerted: number;
   return { alerted };
 }
 
-/**
- * Emails each requester whose institution request has been approved and
- * hasn't been told yet, using the same claim-then-send pattern as above
- * (approval_notified_at). `siteUrl` is the app's origin for the sign-in link.
- */
-export async function sendInstitutionApprovalEmails(
-  siteUrl: string,
-): Promise<{ emailed: number; error?: string }> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { sendReminderEmail } = await import("@/lib/email.server");
+type Decision = {
+  status: "approved" | "rejected";
+  column: "approval_notified_at" | "rejection_notified_at";
+  subject: string;
+  body: (institution: string, siteUrl: string) => string[];
+};
 
-  const { data: requests, error } = await supabaseAdmin
-    .from("institution_requests")
-    .select("id, user_id")
-    .eq("status", "approved")
-    .is("approval_notified_at", null);
-  if (error) return { emailed: 0, error: error.message };
-
-  let emailed = 0;
-  for (const request of requests ?? []) {
-    const { data: claimed } = await supabaseAdmin
-      .from("institution_requests")
-      .update({ approval_notified_at: new Date().toISOString() })
-      .eq("id", request.id)
-      .is("approval_notified_at", null)
-      .select("id");
-    if (!claimed?.length) continue; // another run already took it
-
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("name, email, organization_name")
-      .eq("id", request.user_id)
-      .maybeSingle();
-
-    const release = () =>
-      supabaseAdmin
-        .from("institution_requests")
-        .update({ approval_notified_at: null })
-        .eq("id", request.id);
-
-    if (!profile?.email) {
-      await release();
-      continue;
-    }
-
-    const institution = profile.organization_name ?? "your institution";
-    const message = [
-      `Hello${profile.name ? ` ${profile.name}` : ""},`,
-      "",
+const DECISIONS: Decision[] = [
+  {
+    status: "approved",
+    column: "approval_notified_at",
+    subject: "Your institution account is approved — Minister's Vault",
+    body: (institution, siteUrl) => [
       `Good news: the institution account for ${institution} on Minister's Vault has been approved.`,
       "",
       `Sign in to open your Library Dashboard: ${siteUrl}/auth`,
       "",
       "If you're already signed in, refresh the page.",
-    ].join("\n");
+    ],
+  },
+  {
+    status: "rejected",
+    column: "rejection_notified_at",
+    subject: "About your institution account request — Minister's Vault",
+    body: (institution, siteUrl) => [
+      `Thank you for requesting an institution account for ${institution} on Minister's Vault.`,
+      "After review, we're not able to approve it at this time.",
+      "",
+      "You can still use Minister's Vault with a personal account. Sign in and choose",
+      `Pastor/Minister or Theological Student to get started: ${siteUrl}/auth`,
+    ],
+  },
+];
 
-    const result = await sendReminderEmail({
-      to: profile.email,
-      subject: "Your institution account is approved — Minister's Vault",
-      message,
-    });
+function markNotified(column: Decision["column"], value: string | null) {
+  return column === "approval_notified_at"
+    ? { approval_notified_at: value }
+    : { rejection_notified_at: value };
+}
 
-    if (result.sent) emailed += 1;
-    else await release();
+/**
+ * Emails each requester whose institution request has been approved or
+ * rejected and who hasn't been told yet. Uses the same claim-then-send
+ * pattern as above, with approval_notified_at / rejection_notified_at.
+ * `siteUrl` is the app's origin for the sign-in link.
+ */
+export async function sendInstitutionDecisionEmails(
+  siteUrl: string,
+): Promise<{ emailed: number; error?: string }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { sendReminderEmail } = await import("@/lib/email.server");
+
+  let emailed = 0;
+  for (const decision of DECISIONS) {
+    const { data: requests, error } = await supabaseAdmin
+      .from("institution_requests")
+      .select("id, user_id")
+      .eq("status", decision.status)
+      .is(decision.column, null);
+    if (error) return { emailed, error: error.message };
+
+    for (const request of requests ?? []) {
+      const { data: claimed } = await supabaseAdmin
+        .from("institution_requests")
+        .update(markNotified(decision.column, new Date().toISOString()))
+        .eq("id", request.id)
+        .is(decision.column, null)
+        .select("id");
+      if (!claimed?.length) continue; // another run already took it
+
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("name, email, organization_name")
+        .eq("id", request.user_id)
+        .maybeSingle();
+
+      const release = () =>
+        supabaseAdmin
+          .from("institution_requests")
+          .update(markNotified(decision.column, null))
+          .eq("id", request.id);
+
+      if (!profile?.email) {
+        await release();
+        continue;
+      }
+
+      const institution = profile.organization_name ?? "your institution";
+      const message = [
+        `Hello${profile.name ? ` ${profile.name}` : ""},`,
+        "",
+        ...decision.body(institution, siteUrl),
+      ].join("\n");
+
+      const result = await sendReminderEmail({
+        to: profile.email,
+        subject: decision.subject,
+        message,
+      });
+
+      if (result.sent) emailed += 1;
+      else await release();
+    }
   }
 
   return { emailed };

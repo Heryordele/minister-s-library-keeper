@@ -171,6 +171,7 @@ export type Database = {
           created_at: string
           id: string
           notified_at: string | null
+          rejection_notified_at: string | null
           reviewed_at: string | null
           status: string
           user_id: string
@@ -180,6 +181,7 @@ export type Database = {
           created_at?: string
           id?: string
           notified_at?: string | null
+          rejection_notified_at?: string | null
           reviewed_at?: string | null
           status?: string
           user_id: string
@@ -189,9 +191,37 @@ export type Database = {
           created_at?: string
           id?: string
           notified_at?: string | null
+          rejection_notified_at?: string | null
           reviewed_at?: string | null
           status?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      lending_reminders: {
+        Row: {
+          audience: string
+          borrow_record_id: string
+          due_date: string
+          id: string
+          milestone: string
+          sent_at: string
+        }
+        Insert: {
+          audience: string
+          borrow_record_id: string
+          due_date: string
+          id?: string
+          milestone: string
+          sent_at?: string
+        }
+        Update: {
+          audience?: string
+          borrow_record_id?: string
+          due_date?: string
+          id?: string
+          milestone?: string
+          sent_at?: string
         }
         Relationships: []
       }
@@ -403,6 +433,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_approve_institution_request: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      admin_list_institution_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          account_email: string | null
+          admin_email: string | null
+          created_at: string
+          library_name: string | null
+          organization_name: string | null
+          status: string
+          user_id: string
+        }[]
+      }
+      admin_reject_institution_request: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      is_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       approve_institution_request: {
         Args: { _user_id: string }
         Returns: undefined
