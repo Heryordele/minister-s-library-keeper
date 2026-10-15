@@ -96,7 +96,7 @@ function ScanPage() {
     const isbn = normaliseIsbn(rawIsbn);
     setStage({ kind: "looking-up", isbn });
     try {
-      const result = await lookup(isbn);
+      const result = await lookup({ data: isbn });
       if (!result) {
         toast.info("No match found — finish the details manually.");
         navigate({ to: "/books/new", search: { isbn } });
