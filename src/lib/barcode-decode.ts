@@ -5,7 +5,8 @@ import { isValidIsbn, normaliseIsbn } from "@/lib/book-lookup";
 
 /** Phone photos are often far larger than the barcode needs. */
 const SIZES = [2000, 1000] as const;
-const ROTATIONS = [0, 90, 270] as const;
+export const ROTATIONS = [0, 90, 270] as const;
+export type Rotation = (typeof ROTATIONS)[number];
 const CONTRAST = 1.8;
 
 export function barcodeHints() {
@@ -52,29 +53,45 @@ function boostContrast(ctx: CanvasRenderingContext2D, width: number, height: num
   ctx.putImageData(data, 0, 0);
 }
 
-/** Draws one version of the photo (rotated, resized, optionally boosted) to a temporary image URL. */
-function renderVariant(
-  img: HTMLImageElement,
-  rotation: (typeof ROTATIONS)[number],
+/**
+ * Draws one version of an image (rotated, resized to at most `maxSide`, and
+ * optionally contrast-boosted) onto `canvas`. Works for photos and video frames.
+ */
+export function drawVariant(
+  canvas: HTMLCanvasElement,
+  source: CanvasImageSource,
+  sourceWidth: number,
+  sourceHeight: number,
+  rotation: Rotation,
   maxSide: number,
   boost: boolean,
-): Promise<string> {
-  const longest = Math.max(img.naturalWidth, img.naturalHeight);
+): void {
+  const longest = Math.max(sourceWidth, sourceHeight);
   const scale = Math.min(1, maxSide / longest);
-  const w = Math.round(img.naturalWidth * scale);
-  const h = Math.round(img.naturalHeight * scale);
+  const w = Math.round(sourceWidth * scale);
+  const h = Math.round(sourceHeight * scale);
   const swapped = rotation === 90 || rotation === 270;
 
-  const canvas = document.createElement("canvas");
   canvas.width = swapped ? h : w;
   canvas.height = swapped ? w : h;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return Promise.reject(new Error("This browser cannot read the photo."));
+  if (!ctx) throw new Error("This browser cannot read the image.");
 
   ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.rotate((rotation * Math.PI) / 180);
-  ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  ctx.drawImage(source, -w / 2, -h / 2, w, h);
   if (boost) boostContrast(ctx, canvas.width, canvas.height);
+}
+
+/** Draws one version of the photo to a temporary image URL. */
+function renderVariant(
+  img: HTMLImageElement,
+  rotation: Rotation,
+  maxSide: number,
+  boost: boolean,
+): Promise<string> {
+  const canvas = document.createElement("canvas");
+  drawVariant(canvas, img, img.naturalWidth, img.naturalHeight, rotation, maxSide, boost);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
