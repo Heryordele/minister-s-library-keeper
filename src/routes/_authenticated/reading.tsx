@@ -37,6 +37,7 @@ import {
   fetchAllProgress,
   type GoalPeriodName,
 } from "@/lib/dashboard";
+import { computeReadingFrequency } from "@/lib/reading-frequency";
 import {
   deleteGoal,
   describeGoal,
@@ -121,6 +122,7 @@ function ReadingPage() {
   const current = liveStreakDays(streak ?? null);
   const longest = streak?.longest_streak_days ?? 0;
   const dash = computeReadingDashboard(books ?? [], progress ?? [], categories ?? []);
+  const frequency = computeReadingFrequency(progress ?? []);
   const hasNoLibrary = !booksLoading && (books?.length ?? 0) === 0;
 
   return (
@@ -220,6 +222,19 @@ function ReadingPage() {
               Log progress from any book marked “reading” to keep your streak alive.
             </p>
             <StreakBadges longestStreak={longest} className="mt-5" />
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-lg font-semibold">Reading frequency</h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <StatCard label="Days read, last 30" value={frequency.daysReadLast30} />
+              <StatCard label="Sessions, last 7 days" value={frequency.sessionsLast7} />
+              <StatCard
+                label="Sessions a week"
+                value={frequency.sessionsPerWeek}
+                hint="Average over the last 4 weeks"
+              />
+            </div>
           </section>
 
           <section>
