@@ -268,6 +268,7 @@ export type Database = {
           email: string | null
           id: string
           last_exported_at: string | null
+          suspended_at: string | null
           library_name: string | null
           name: string | null
           organization_name: string | null
@@ -281,6 +282,7 @@ export type Database = {
           email?: string | null
           id: string
           last_exported_at?: string | null
+          suspended_at?: string | null
           library_name?: string | null
           name?: string | null
           organization_name?: string | null
@@ -294,6 +296,7 @@ export type Database = {
           email?: string | null
           id?: string
           last_exported_at?: string | null
+          suspended_at?: string | null
           library_name?: string | null
           name?: string | null
           organization_name?: string | null
@@ -461,6 +464,24 @@ export type Database = {
       admin_school_detail: {
         Args: { _user_id: string }
         Returns: Json
+      }
+      admin_list_users: {
+        Args: { _search?: string; _limit?: number }
+        Returns: {
+          book_count: number
+          created_at: string
+          email: string
+          last_sign_in_at: string | null
+          name: string | null
+          organization_name: string | null
+          plan: string
+          suspended_at: string | null
+          user_id: string
+        }[]
+      }
+      admin_set_user_suspended: {
+        Args: { _user_id: string; _suspended: boolean }
+        Returns: undefined
       }
       admin_approve_institution_request: {
         Args: { _user_id: string }
