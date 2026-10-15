@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { BookForm, type BookFormValues } from "@/components/book-form";
 import { DuplicateWarning } from "@/components/duplicate-warning";
 import { decodeIsbnBarcode } from "@/lib/barcode-decode";
+import { LiveBarcodeScanner } from "@/components/live-barcode-scanner";
 import { findLibraryDuplicates, type DuplicateMatch } from "@/lib/duplicates";
 import { supabase } from "@/integrations/supabase/client";
 import { booksKey } from "@/lib/books";
@@ -215,6 +216,7 @@ function Scanner({
   const [preview, setPreview] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [live, setLive] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -254,6 +256,15 @@ function Scanner({
 
   return (
     <section className="space-y-3">
+      {live ? (
+        <LiveBarcodeScanner
+          onDetected={(isbn) => {
+            setLive(false);
+            onDetected(isbn);
+          }}
+          onClose={() => setLive(false)}
+        />
+      ) : (
       <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-border bg-muted">
         {preview ? (
           <img src={preview} alt="Captured barcode" className="h-full w-full object-cover" />
@@ -271,6 +282,7 @@ function Scanner({
           </div>
         )}
       </div>
+      )}
       <input
         ref={inputRef}
         type="file"
@@ -284,7 +296,17 @@ function Scanner({
         }}
       />
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => inputRef.current?.click()} disabled={reading}>
+        {!live && (
+          <Button onClick={() => setLive(true)} disabled={reading}>
+            <Camera className="mr-2 h-4 w-4" />
+            Scan with camera
+          </Button>
+        )}
+        <Button
+          variant={live ? "default" : "outline"}
+          onClick={() => inputRef.current?.click()}
+          disabled={reading}
+        >
           <Camera className="mr-2 h-4 w-4" />
           {reading ? "Reading barcode…" : preview ? "Capture again" : "Capture barcode"}
         </Button>
