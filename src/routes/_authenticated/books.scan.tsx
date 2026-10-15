@@ -9,15 +9,13 @@ import { toast } from "sonner";
 
 import { PageHeader } from "@/components/page-header";
 import { BookForm, type BookFormValues } from "@/components/book-form";
+import { DuplicateWarning } from "@/components/duplicate-warning";
+import { findLibraryDuplicates, type DuplicateMatch } from "@/lib/duplicates";
 import { supabase } from "@/integrations/supabase/client";
 import { booksKey } from "@/lib/books";
 import { mirrorRemoteCover } from "@/lib/covers.functions";
 import { serverLookupIsbn } from "@/lib/book-lookup.server";
-import {
-  isValidIsbn,
-  normaliseIsbn,
-  type LookupResult,
-} from "@/lib/book-lookup";
+import { isValidIsbn, normaliseIsbn, type LookupResult } from "@/lib/book-lookup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,9 +44,14 @@ function ScanPage() {
   const qc = useQueryClient();
   const [stage, setStage] = useState<Stage>({ kind: "scanning" });
   const [saveError, setSaveError] = useState<string | null>(null);
+  const isbnSectionRef = useRef<HTMLDivElement>(null);
+  const [checking, setChecking] = useState(false);
+  const [pending, setPending] = useState<{
+    values: BookFormValues;
+    matches: DuplicateMatch[];
+  } | null>(null);
   const mirrorCover = useServerFn(mirrorRemoteCover);
-  const lookup = useServerFn(serverLookupIsbn );
-
+  const lookup = useServerFn(serverLookupIsbn);
 
   const save = useMutation({
     mutationFn: async (values: BookFormValues) => {
@@ -86,8 +89,7 @@ function ScanPage() {
       toast.success("Book added to your library.");
       navigate({ to: "/books/$bookId", params: { bookId: data.id } });
     },
-    onError: (e) =>
-      setSaveError(e instanceof Error ? e.message : "Could not save this book."),
+    onError: (e) => setSaveError(e instanceof Error ? e.message : "Could not save this book."),
   });
 
   async function handleIsbn(rawIsbn: string) {
@@ -132,10 +134,20 @@ function ScanPage() {
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Description from {r.source}
               </div>
-              <p className="mt-2 line-clamp-6 text-sm text-muted-foreground">
-                {r.description}
-              </p>
+              <p className="mt-2 line-clamp-6 text-sm text-muted-foreground">{r.description}</p>
             </div>
+          )}
+          {pending && (
+            <DuplicateWarning
+              matches={pending.matches}
+              busy={save.isPending}
+              onAddAnyway={() => {
+                const values = pending.values;
+                setPending(null);
+                save.mutate(values);
+              }}
+              onCancel={() => setPending(null)}
+            />
           )}
           <BookForm
             book={{
@@ -148,10 +160,22 @@ function ScanPage() {
               cover_image_url: r.cover_image_url,
             }}
             submitLabel="Confirm and add to library"
-            submitting={save.isPending}
+            submitting={save.isPending || checking}
             error={saveError}
-            onSubmit={(v) => {
+            onSubmit={async (v) => {
               setSaveError(null);
+              setChecking(true);
+              let matches: DuplicateMatch[] = [];
+              try {
+                matches = await findLibraryDuplicates(v);
+              } catch {
+                // If the check can't run, don't stop the book from being saved.
+              }
+              setChecking(false);
+              if (matches.length > 0) {
+                setPending({ values: v, matches });
+                return;
+              }
               save.mutate(v);
             }}
             onCancel={() => setStage({ kind: "scanning" })}
@@ -160,8 +184,6 @@ function ScanPage() {
       </>
     );
   }
-
-  const isbnSectionRef = useRef<HTMLDivElement>(null);
 
   const scrollToIsbn = () => {
     isbnSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -183,7 +205,13 @@ function ScanPage() {
   );
 }
 
-function Scanner({ onDetected, onScanFailed }: { onDetected: (isbn: string) => void; onScanFailed: () => void }) {
+function Scanner({
+  onDetected,
+  onScanFailed,
+}: {
+  onDetected: (isbn: string) => void;
+  onScanFailed: () => void;
+}) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
@@ -302,9 +330,9 @@ function ManualIsbn({ onSubmit }: { onSubmit: (isbn: string) => void }) {
       <div>
         <h2 className="text-lg font-semibold">Enter ISBN manually</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          If you have the ISBN number, enter it directly to look up the book details. This needs
-          the actual 10 or 13-digit ISBN — usually printed above or below the barcode on the back
-          cover — not the title.
+          If you have the ISBN number, enter it directly to look up the book details. This needs the
+          actual 10 or 13-digit ISBN — usually printed above or below the barcode on the back cover
+          — not the title.
         </p>
       </div>
       <form
@@ -334,8 +362,8 @@ function ManualIsbn({ onSubmit }: { onSubmit: (isbn: string) => void }) {
           </div>
           {showError && (
             <p className="text-xs text-destructive">
-              That's {normalised.length} digit{normalised.length === 1 ? "" : "s"} — an ISBN is
-              10 or 13 digits. Don't have it handy? Use{" "}
+              That's {normalised.length} digit{normalised.length === 1 ? "" : "s"} — an ISBN is 10
+              or 13 digits. Don't have it handy? Use{" "}
               <span className="font-medium">Add manually</span> instead and skip the ISBN field.
             </p>
           )}
