@@ -433,6 +433,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_approve_institution_request: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      admin_list_institution_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          account_email: string | null
+          admin_email: string | null
+          created_at: string
+          library_name: string | null
+          organization_name: string | null
+          status: string
+          user_id: string
+        }[]
+      }
+      admin_reject_institution_request: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      is_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       approve_institution_request: {
         Args: { _user_id: string }
         Returns: undefined

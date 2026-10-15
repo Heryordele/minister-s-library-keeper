@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Mail, Pencil, UserCircle, ShieldCheck } from "lucide-react";
@@ -33,6 +33,7 @@ function AccountPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [superAdmin, setSuperAdmin] = useState(false);
   const { data: streak } = useQuery({
     queryKey: readingStreakKey,
     queryFn: fetchStreak,
@@ -64,6 +65,8 @@ function AccountPage() {
         },
       );
       setRole(r?.role ?? null);
+      const { data: isAdmin } = await supabase.rpc("is_super_admin");
+      setSuperAdmin(isAdmin === true);
       setLoading(false);
     })();
   }, []);
@@ -84,9 +87,7 @@ function AccountPage() {
                   <UserCircle className="h-8 w-8" />
                 </div>
                 <div>
-                  <div className="text-xl font-semibold">
-                    {profile.name ?? "Unnamed reader"}
-                  </div>
+                  <div className="text-xl font-semibold">{profile.name ?? "Unnamed reader"}</div>
                   <div className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
                     <Mail className="h-3.5 w-3.5" />
                     {profile.email}
@@ -126,19 +127,26 @@ function AccountPage() {
                 Current streak {liveStreakDays(streak ?? null)} days · longest{" "}
                 {streak?.longest_streak_days ?? 0} days.
               </p>
-              <StreakBadges
-                longestStreak={streak?.longest_streak_days ?? 0}
-                className="mt-4"
-              />
+              <StreakBadges longestStreak={streak?.longest_streak_days ?? 0} className="mt-4" />
             </div>
 
-
+            {superAdmin && (
+              <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+                <h2 className="text-base font-semibold">Super admin</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Review institution requests and approve or reject schools.
+                </p>
+                <div className="mt-4">
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/admin">Institution requests</Link>
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
               <h2 className="text-base font-semibold">Session</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Sign out of this device.
-              </p>
+              <p className="mt-1 text-sm text-muted-foreground">Sign out of this device.</p>
               <div className="mt-4">
                 <SignOutButton />
               </div>
