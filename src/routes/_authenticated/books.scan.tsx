@@ -2,14 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BrowserMultiFormatReader } from "@zxing/browser";
-import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 import { Camera, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/page-header";
 import { BookForm, type BookFormValues } from "@/components/book-form";
 import { DuplicateWarning } from "@/components/duplicate-warning";
+import { decodeIsbnBarcode } from "@/lib/barcode-decode";
 import { findLibraryDuplicates, type DuplicateMatch } from "@/lib/duplicates";
 import { supabase } from "@/integrations/supabase/client";
 import { booksKey } from "@/lib/books";
@@ -232,22 +231,13 @@ function Scanner({
     });
     setReading(true);
     try {
-      const hints = new Map();
-      // Prioritize ISBN barcode formats (EAN-13, EAN-8, UPC-A)
-      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-        BarcodeFormat.EAN_13,
-        BarcodeFormat.UPC_A,
-        BarcodeFormat.EAN_8,
-        BarcodeFormat.UPC_E,
-        BarcodeFormat.CODE_128,
-        BarcodeFormat.ITF,
-      ]);
-      hints.set(DecodeHintType.TRY_HARDER, true);
-      hints.set(DecodeHintType.PURE_BARCODE, false);
-
-      const reader = new BrowserMultiFormatReader(hints);
-      const result = await reader.decodeFromImageUrl(url);
-      const text = normaliseIsbn(result.getText());
+      const text = await decodeIsbnBarcode(file);
+      if (text === null) {
+        setError(
+          "Barcode not detected. Tips: ensure it's flat, well-lit, and in focus. Or type the ISBN below.",
+        );
+        return;
+      }
       if (!isValidIsbn(text)) {
         setError("Barcode detected but isn't valid ISBN. Type it manually below.");
         return;
