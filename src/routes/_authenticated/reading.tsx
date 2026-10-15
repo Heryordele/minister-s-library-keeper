@@ -49,6 +49,7 @@ import {
   type ReadingGoal,
   type ReadingProgress as ReadingProgressRow,
 } from "@/lib/reading";
+import { streakStatus } from "@/lib/streak-status";
 
 export const Route = createFileRoute("/_authenticated/reading")({
   head: () => ({
@@ -121,6 +122,12 @@ function ReadingPage() {
 
   const current = liveStreakDays(streak ?? null);
   const longest = streak?.longest_streak_days ?? 0;
+  const status = streakStatus({
+    lastLoggedDate: streak?.last_logged_date ?? null,
+    currentStreak: streak?.current_streak_days ?? 0,
+    longestStreak: longest,
+    today: new Date().toISOString().slice(0, 10),
+  });
   const dash = computeReadingDashboard(books ?? [], progress ?? [], categories ?? []);
   const frequency = computeReadingFrequency(progress ?? []);
   const hasNoLibrary = !booksLoading && (books?.length ?? 0) === 0;
@@ -220,6 +227,15 @@ function ReadingPage() {
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
               Log progress from any book marked “reading” to keep your streak alive.
+            </p>
+            <p
+              className={
+                status.state === "reset" || status.state === "at-risk"
+                  ? "mt-2 text-sm font-medium text-foreground"
+                  : "mt-2 text-sm text-muted-foreground"
+              }
+            >
+              {status.message}
             </p>
             <StreakBadges longestStreak={longest} className="mt-5" />
           </section>
