@@ -433,6 +433,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_dashboard_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      admin_current_email: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      admin_recent_activity: {
+        Args: { _limit?: number }
+        Returns: {
+          action: string
+          actor_email: string
+          created_at: string
+          details: string | null
+          target_organization: string | null
+          target_user_id: string | null
+        }[]
+      }
+      admin_school_detail: {
+        Args: { _user_id: string }
+        Returns: Json
+      }
       admin_approve_institution_request: {
         Args: { _user_id: string }
         Returns: undefined
