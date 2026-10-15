@@ -74,6 +74,8 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   );
 }
 
+const SITE_URL = "https://minister-s-library-keeper.vercel.app";
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -93,11 +95,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Catalog your ministry library, never lose a lent book, and build consistent reading habits.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Minister's Vault" },
+      { property: "og:url", content: SITE_URL },
+      { property: "og:image", content: `${SITE_URL}/og-image.png` },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      {
+        property: "og:image:alt",
+        content: "Minister's Vault: Preserving Knowledge. Building Discipline. Protecting Legacy.",
+      },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: `${SITE_URL}/og-image.png` },
+      { name: "theme-color", content: "#0b1020" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -162,4 +176,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-
