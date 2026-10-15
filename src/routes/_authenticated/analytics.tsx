@@ -30,6 +30,8 @@ import {
   fetchCategories,
 } from "@/lib/books";
 import { borrowRecordsKey, fetchBorrowRecords } from "@/lib/lending";
+import { computeAnalyticsFigures } from "@/lib/analytics-figures";
+import { fetchStreak, liveStreakDays, readingStreakKey } from "@/lib/reading";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({
@@ -78,8 +80,18 @@ function AnalyticsPage() {
     queryKey: allProgressKey,
     queryFn: fetchAllProgress,
   });
+  const { data: streak } = useQuery({
+    queryKey: readingStreakKey,
+    queryFn: fetchStreak,
+  });
 
   const stats = computeLibraryStats(books ?? [], records ?? []);
+  const figures = computeAnalyticsFigures({
+    books: books ?? [],
+    progress: progress ?? [],
+    currentStreak: liveStreakDays(streak ?? null),
+    longestStreak: streak?.longest_streak_days ?? 0,
+  });
   const categoryData = categoryPagesRead(
     books ?? [],
     progress ?? [],
@@ -116,6 +128,21 @@ function AnalyticsPage() {
               <StatCard label="Lent out" value={stats.lentOut} />
               <StatCard label="Overdue" value={stats.overdue} />
               <StatCard label="Lost" value={stats.lost} />
+            </section>
+
+            <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <StatCard label="Hours read this month" value={figures.hoursThisMonth} />
+              <StatCard
+                label="Completion rate"
+                value={figures.completionRate === null ? "—" : `${figures.completionRate}%`}
+                hint={
+                  figures.completionRate === null
+                    ? "Start a book to see this"
+                    : "Finished out of books you've started"
+                }
+              />
+              <StatCard label="Current streak" value={`${figures.currentStreak} days`} />
+              <StatCard label="Longest streak" value={`${figures.longestStreak} days`} />
             </section>
 
             <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
