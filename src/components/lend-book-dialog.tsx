@@ -106,6 +106,10 @@ export function LendBookDialog({
                 <Input id="borrower_email" name="borrower_email" type="email" />
               </div>
             </div>
+            <p className="-mt-2 text-xs text-muted-foreground">
+              With an email address, we'll remind them before the due date and if the book is
+              overdue.
+            </p>
             <div className="grid gap-1.5">
               <Label htmlFor="borrower_organization">Church / organization</Label>
               <Input id="borrower_organization" name="borrower_organization" />

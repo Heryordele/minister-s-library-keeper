@@ -101,6 +101,29 @@ export async function markReturned(recordId: string, bookId: string): Promise<vo
   if (bookError) throw bookError;
 }
 
+/**
+ * Moves an open loan's due date. The book goes back to "borrowed" if it was
+ * flagged overdue, and reminders restart for the new date.
+ */
+export async function extendLoan(
+  recordId: string,
+  bookId: string,
+  newDueDate: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("borrow_records")
+    .update({ expected_return_date: newDueDate })
+    .eq("id", recordId);
+  if (error) throw error;
+
+  const { error: bookError } = await supabase
+    .from("books")
+    .update({ lending_status: "borrowed" })
+    .eq("id", bookId)
+    .eq("lending_status", "overdue");
+  if (bookError) throw bookError;
+}
+
 /** Marks a book (and its open loan, if any) as lost. */
 export async function markLost(bookId: string, recordId?: string | null): Promise<void> {
   if (recordId) {

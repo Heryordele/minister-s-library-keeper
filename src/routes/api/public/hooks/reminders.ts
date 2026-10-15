@@ -59,41 +59,9 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
         const pending: Pending[] = [];
 
         // --- Lending reminders -------------------------------------------
-        const { data: loans, error: loansError } = await supabaseAdmin
-          .from("borrow_records")
-          .select("owner_id, borrower_name, expected_return_date, books(title)")
-          .eq("status", "borrowed")
-          .not("expected_return_date", "is", null);
-        if (loansError) {
-          return Response.json({ error: loansError.message }, { status: 500 });
-        }
-
-        for (const loan of loans ?? []) {
-          const ownerId = loan.owner_id;
-          const due = startOfDay(loan.expected_return_date as string);
-          const daysLeft = daysBetween(now, due);
-          const title = (loan.books as { title: string } | null)?.title ?? "A book";
-          const dueLabel = due.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          });
-
-          if (daysLeft === 3) {
-            pending.push({
-              user_id: ownerId,
-              type: "lending_reminder",
-              message: `“${title}” is due back from ${loan.borrower_name} on ${dueLabel} — three days to go. A gentle reminder now usually does the trick.`,
-            });
-          }
-          if (daysLeft < 0) {
-            pending.push({
-              user_id: ownerId,
-              type: "overdue",
-              message: `“${title}” was due back from ${loan.borrower_name} on ${dueLabel} and hasn't returned yet. Worth a friendly follow-up.`,
-            });
-          }
-        }
+        // Owner and borrower reminders, overdue flags and their send log.
+        const { sendLendingReminders } = await import("@/lib/lending-reminders.server");
+        const lending = await sendLendingReminders();
 
         // --- Habit nudges --------------------------------------------------
         const { data: goals } = await supabaseAdmin.from("reading_goals").select("user_id");
@@ -138,7 +106,7 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
         }
 
         if (pending.length === 0) {
-          return Response.json({ success: true, created: 0 });
+          return Response.json({ success: true, created: 0, lending });
         }
 
         // De-duplicate against notifications this user already has.
@@ -150,7 +118,7 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
 
         const fresh = pending.filter((p) => !seen.has(`${p.user_id}::${p.message}`));
         if (fresh.length === 0) {
-          return Response.json({ success: true, created: 0, emailed: 0 });
+          return Response.json({ success: true, created: 0, emailed: 0, lending });
         }
 
         // Look up each recipient's email once before sending.
@@ -198,7 +166,7 @@ export const Route = createFileRoute("/api/public/hooks/reminders")({
           return Response.json({ error: error.message }, { status: 500 });
         }
 
-        return Response.json({ success: true, created: rows.length, emailed });
+        return Response.json({ success: true, created: rows.length, emailed, lending });
       },
     },
   },

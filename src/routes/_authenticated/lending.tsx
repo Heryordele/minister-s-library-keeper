@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Loader2, PackageX, Undo2, Users } from "lucide-react";
 import { toast } from "sonner";
 
+import { ExtendLoanDialog } from "@/components/extend-loan-dialog";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -178,6 +179,13 @@ function LendingPage() {
                         </div>
                         {key !== "returned" && (
                           <div className="flex shrink-0 flex-wrap gap-2">
+                            <ExtendLoanDialog
+                              recordId={r.id}
+                              bookId={r.book_id}
+                              bookTitle={r.books?.title ?? "this book"}
+                              borrowerName={r.borrower_name}
+                              currentDueDate={r.expected_return_date}
+                            />
                             <Button
                               variant="outline"
                               size="sm"

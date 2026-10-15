@@ -198,6 +198,33 @@ export type Database = {
         }
         Relationships: []
       }
+      lending_reminders: {
+        Row: {
+          audience: string
+          borrow_record_id: string
+          due_date: string
+          id: string
+          milestone: string
+          sent_at: string
+        }
+        Insert: {
+          audience: string
+          borrow_record_id: string
+          due_date: string
+          id?: string
+          milestone: string
+          sent_at?: string
+        }
+        Update: {
+          audience?: string
+          borrow_record_id?: string
+          due_date?: string
+          id?: string
+          milestone?: string
+          sent_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           channel: Database["public"]["Enums"]["notification_channel"]
