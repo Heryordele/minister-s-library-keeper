@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { StatCard } from "@/components/stat-card";
+import { AdminUsersSection } from "@/components/admin-users-section";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -260,6 +261,8 @@ function AdminPage() {
             </ul>
           )}
         </section>
+
+        <AdminUsersSection />
 
         <section>
           <h2 className="mb-3 font-serif text-lg font-semibold">Recent activity</h2>
