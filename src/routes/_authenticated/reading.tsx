@@ -16,9 +16,7 @@ import {
 import { toast } from "sonner";
 
 import { useUserRole } from "@/lib/use-user-role";
-import { MinisterDashboard } from "@/components/dashboards/minister-dashboard";
-import { StudentDashboard } from "@/components/dashboards/student-dashboard";
-import { InstitutionDashboard } from "@/components/dashboards/institution-dashboard";
+import { RoleShortcuts } from "@/components/role-shortcuts";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { ReadingGoalDialog } from "@/components/reading-goal-dialog";
 import { StatCard } from "@/components/stat-card";
@@ -52,9 +50,6 @@ import {
 } from "@/lib/reading";
 
 export const Route = createFileRoute("/_authenticated/reading")({
-  // ?view=goals shows the goals & streak view to users who have a role dashboard.
-  validateSearch: (search: Record<string, unknown>): { view?: "goals" } =>
-    search.view === "goals" ? { view: "goals" } : {},
   head: () => ({
     meta: [
       { title: "Reading — Minister's Vault" },
@@ -74,8 +69,7 @@ export const Route = createFileRoute("/_authenticated/reading")({
 
 function ReadingPage() {
   const qc = useQueryClient();
-  const { role, loading: roleLoading } = useUserRole();
-  const { view } = Route.useSearch();
+  const { role } = useUserRole();
 
   const { data: goals, isLoading } = useQuery({
     queryKey: readingGoalsKey,
@@ -107,33 +101,23 @@ function ReadingPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not remove the goal."),
   });
 
-  // Show role-specific dashboard if role is available
-  if (!roleLoading && role && view !== "goals") {
-    const pageTitle = {
-      minister: "Your Pastoral Library",
-      student: "Your Reading Goals",
-      institution_admin: "Library Dashboard",
-    }[role];
+  // Every role lands on the reading dashboard (PRD FR-013); the title and a
+  // shortcut row adapt to the role.
+  const pageTitle = role
+    ? {
+        minister: "Your Pastoral Library",
+        student: "Your Reading Goals",
+        institution_admin: "Library Dashboard",
+      }[role]
+    : "Reading dashboard";
+  const pageSubtitle = role
+    ? {
+        minister: "Your reading, goals, and the books you've lent out.",
+        student: "Track progress, build discipline, reach your goals.",
+        institution_admin: "Your reading and the institution's holdings at a glance.",
+      }[role]
+    : "Your goals, streaks, and daily discipline.";
 
-    const pageSubtitle = {
-      minister: "Cataloging, lending, and stewardship.",
-      student: "Track progress, build discipline, reach your goals.",
-      institution_admin: "Institutional library and holdings overview.",
-    }[role];
-
-    return (
-      <>
-        <PageHeader title={pageTitle} subtitle={pageSubtitle} />
-        <div className="mx-auto max-w-6xl px-4 py-8 md:px-8">
-          {role === "minister" && <MinisterDashboard />}
-          {role === "student" && <StudentDashboard />}
-          {role === "institution_admin" && <InstitutionDashboard />}
-        </div>
-      </>
-    );
-  }
-
-  // Fallback to original dashboard for users without role set
   const current = liveStreakDays(streak ?? null);
   const longest = streak?.longest_streak_days ?? 0;
   const dash = computeReadingDashboard(books ?? [], progress ?? [], categories ?? []);
@@ -142,18 +126,9 @@ function ReadingPage() {
   return (
     <>
       <PageHeader
-        title="Reading dashboard"
-        subtitle="Your goals, streaks, and daily discipline."
-        actions={
-          <>
-            {role && (
-              <Button asChild variant="ghost">
-                <Link to="/reading">Back to dashboard</Link>
-              </Button>
-            )}
-            {!hasNoLibrary && <ReadingGoalDialog />}
-          </>
-        }
+        title={pageTitle}
+        subtitle={pageSubtitle}
+        actions={hasNoLibrary ? undefined : <ReadingGoalDialog />}
       />
 
       {hasNoLibrary ? (
@@ -193,6 +168,8 @@ function ReadingPage() {
         </div>
       ) : (
         <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 md:px-8">
+          {role && <RoleShortcuts role={role} />}
+
           <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
             {booksLoading ? (
               <>
