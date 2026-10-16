@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { StatCard } from "@/components/stat-card";
 import { AdminUsersSection } from "@/components/admin-users-section";
+import { AdminNav } from "@/components/admin-nav";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -144,18 +145,27 @@ function AdminPage() {
         title="Super admin"
         subtitle="Schools, requests, and what's happening across the vault."
       />
-      <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 md:px-8">
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <StatCard label="Awaiting review" value={stats?.pending ?? "—"} />
-          <StatCard label="Approved schools" value={stats?.approved ?? "—"} />
-          <StatCard label="Users" value={stats?.users ?? "—"} />
+      <AdminNav />
+      <div className="mx-auto max-w-5xl space-y-10 px-4 py-8 md:px-8">
+        <section aria-label="Overview" className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <a href="#schools" className="block transition-opacity hover:opacity-80">
+            <StatCard label="Awaiting review" value={stats?.pending ?? "—"} />
+          </a>
+          <a href="#schools" className="block transition-opacity hover:opacity-80">
+            <StatCard label="Approved schools" value={stats?.approved ?? "—"} />
+          </a>
+          <a href="#users" className="block transition-opacity hover:opacity-80">
+            <StatCard label="Users" value={stats?.users ?? "—"} />
+          </a>
           <StatCard label="Books catalogued" value={stats?.books ?? "—"} />
           <StatCard label="Out on loan" value={stats?.out_on_loan ?? "—"} />
           <StatCard label="Overdue" value={stats?.overdue ?? "—"} />
-          <StatCard label="Rejected" value={stats?.rejected ?? "—"} />
+          <a href="#schools" className="block transition-opacity hover:opacity-80">
+            <StatCard label="Rejected" value={stats?.rejected ?? "—"} />
+          </a>
         </section>
 
-        <section>
+        <section id="schools" className="scroll-mt-20">
           <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <h2 className="font-serif text-lg font-semibold">Schools</h2>
@@ -262,9 +272,11 @@ function AdminPage() {
           )}
         </section>
 
-        <AdminUsersSection />
+        <div id="users" className="scroll-mt-20">
+          <AdminUsersSection />
+        </div>
 
-        <section>
+        <section id="activity" className="scroll-mt-20">
           <h2 className="mb-3 font-serif text-lg font-semibold">Recent activity</h2>
           {(activity ?? []).length === 0 ? (
             <p className="rounded-lg border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">

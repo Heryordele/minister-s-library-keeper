@@ -1,12 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/stat-card";
+import { AdminNav } from "@/components/admin-nav";
 
 export const Route = createFileRoute("/_authenticated/admin/$userId")({
   head: () => ({ meta: [{ title: "School — Minister's Vault" }] }),
@@ -82,14 +82,8 @@ function SchoolDetailPage() {
       <PageHeader
         title={school.organization_name ?? "Unnamed institution"}
         subtitle={school.library_name ?? "Institution account"}
-        actions={
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/admin">
-              <ArrowLeft className="mr-2 h-4 w-4" /> All schools
-            </Link>
-          </Button>
-        }
       />
+      <AdminNav school />
       <div className="mx-auto max-w-4xl space-y-8 px-4 py-8 md:px-8">
         <section className="rounded-lg border border-border bg-card p-5">
           <div className="flex flex-wrap items-center gap-2">
