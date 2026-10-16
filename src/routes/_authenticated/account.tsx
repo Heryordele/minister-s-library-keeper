@@ -75,7 +75,19 @@ function AccountPage() {
 
   return (
     <>
-      <PageHeader title="Account" subtitle="Your profile and plan." />
+      <PageHeader
+        title="Account"
+        subtitle="Your profile and plan."
+        actions={
+          superAdmin ? (
+            <Button asChild size="sm">
+              <Link to="/admin">
+                <ShieldCheck className="mr-2 h-4 w-4" /> Super admin console
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
       <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 md:px-8">
         {loading || !profile ? (
           <div className="grid place-items-center py-16">
@@ -131,20 +143,6 @@ function AccountPage() {
               </p>
               <StreakBadges longestStreak={streak?.longest_streak_days ?? 0} className="mt-4" />
             </div>
-
-            {superAdmin && (
-              <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-                <h2 className="text-base font-semibold">Super admin</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Review institution requests and approve or reject schools.
-                </p>
-                <div className="mt-4">
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/admin">Institution requests</Link>
-                  </Button>
-                </div>
-              </div>
-            )}
 
             <DataExportCard />
 
