@@ -386,25 +386,35 @@ function Landing() {
         </section>
 
         {/* Closing CTA */}
-        <section className="bg-primary px-6 py-20 text-center md:py-28">
-          <h2 className="font-catalog-serif mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-primary-foreground sm:text-4xl">
-            Your library deserves a catalog card.
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-primary-foreground/70">
-            Free to start. Built for ministers, pastors, theological students, and the schools that
-            train them.
-          </p>
-          <div className="mt-8">
-            <Button
-              asChild
-              size="lg"
-              className="font-catalog-mono border-2 border-accent bg-accent px-8 text-accent-foreground hover:bg-accent/90"
-            >
-              <Link to="/auth" search={{ mode: "signup" }}>
-                Request your card
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
+        <section className="relative overflow-hidden bg-primary px-6 py-20 text-center md:py-28">
+          <img
+            src="/cta-catalogue-band.webp"
+            alt=""
+            aria-hidden
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover opacity-40"
+          />
+          <div aria-hidden className="absolute inset-0 bg-primary/70" />
+          <div className="relative">
+            <h2 className="font-catalog-serif mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-primary-foreground sm:text-4xl">
+              Your library deserves a catalog card.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-primary-foreground/70">
+              Free to start. Built for ministers, pastors, theological students, and the schools
+              that train them.
+            </p>
+            <div className="mt-8">
+              <Button
+                asChild
+                size="lg"
+                className="font-catalog-mono border-2 border-accent bg-accent px-8 text-accent-foreground hover:bg-accent/90"
+              >
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  Request your card
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </section>
       </main>
