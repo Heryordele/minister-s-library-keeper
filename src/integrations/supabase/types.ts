@@ -465,8 +465,12 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Json
       }
+      admin_set_user_role: {
+        Args: { _user_id: string; _role: string }
+        Returns: undefined
+      }
       admin_list_users: {
-        Args: { _search?: string; _limit?: number }
+        Args: { _search?: string; _limit?: number; _role?: string }
         Returns: {
           book_count: number
           created_at: string
@@ -475,6 +479,7 @@ export type Database = {
           name: string | null
           organization_name: string | null
           plan: string
+          role: string | null
           suspended_at: string | null
           user_id: string
         }[]
