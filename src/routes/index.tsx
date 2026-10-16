@@ -38,6 +38,8 @@ const READERS = [
   {
     code: "MN",
     title: "Ministers and pastors",
+    image: "/role-ministers.webp",
+    alt: "Hardcover theology books standing on a navy oak shelf beside a brass bookend.",
     body: "A personal library for the books you preach from and the books you lend out. Catalog every volume and keep a reading habit that carries through a busy week.",
     points: [
       "Cataloging by classification",
@@ -48,6 +50,8 @@ const READERS = [
   {
     code: "TS",
     title: "Theological students",
+    image: "/role-students.webp",
+    alt: "A closed notebook, a pencil and a stack of blank index cards on a navy desk.",
     body: "Your reading goals and the books you have on loan, kept in one place. Build discipline through a full semester, one stamp at a time.",
     points: [
       "Reading goals and progress",
@@ -58,6 +62,8 @@ const READERS = [
   {
     code: "IN",
     title: "Seminaries and schools",
+    image: "/role-institutions.webp",
+    alt: "A seminary corridor lined with navy oak card catalogue drawers and brass label holders.",
     body: "One institutional library for your campus, with multi-user access for staff and students. Your account is approved first, then the institution dashboard opens.",
     points: [
       "A shared institutional library",
@@ -332,6 +338,15 @@ function Landing() {
               })}
             </div>
             <div className="order-1 max-w-md lg:order-2">
+              <img
+                src="/reading-stamps.webp"
+                alt=""
+                aria-hidden
+                loading="lazy"
+                width={960}
+                height={720}
+                className="mb-6 aspect-[4/3] w-full rounded-sm border border-border object-cover"
+              />
               <h2 className="font-catalog-serif text-3xl font-semibold tracking-tight sm:text-4xl">
                 Reading, stamped and renewed.
               </h2>
@@ -362,23 +377,35 @@ function Landing() {
               {READERS.map((r) => (
                 <article
                   key={r.code}
-                  className="flex flex-col rounded-sm border border-border bg-card p-6 shadow-sm"
+                  className="flex flex-col overflow-hidden rounded-sm border border-border bg-card shadow-sm"
                 >
-                  <span className="font-catalog-mono inline-block w-fit rounded-sm bg-primary px-2 py-0.5 text-xs font-bold tracking-widest text-primary-foreground">
-                    {r.code}
-                  </span>
-                  <h3 className="font-catalog-serif mt-4 text-xl font-semibold">{r.title}</h3>
-                  <p className="mt-3 text-sm text-muted-foreground">{r.body}</p>
-                  <ul className="mt-5 space-y-2 border-t border-border/70 pt-4 text-sm">
-                    {r.points.map((p) => (
-                      <li key={p} className="flex gap-2">
-                        <span aria-hidden className="font-catalog-mono text-accent-foreground/70">
-                          ·
-                        </span>
-                        {p}
-                      </li>
-                    ))}
-                  </ul>
+                  {r.image && (
+                    <img
+                      src={r.image}
+                      alt={r.alt}
+                      loading="lazy"
+                      width={960}
+                      height={720}
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                  )}
+                  <div className="flex flex-1 flex-col p-6">
+                    <span className="font-catalog-mono inline-block w-fit rounded-sm bg-primary px-2 py-0.5 text-xs font-bold tracking-widest text-primary-foreground">
+                      {r.code}
+                    </span>
+                    <h3 className="font-catalog-serif mt-4 text-xl font-semibold">{r.title}</h3>
+                    <p className="mt-3 text-sm text-muted-foreground">{r.body}</p>
+                    <ul className="mt-5 space-y-2 border-t border-border/70 pt-4 text-sm">
+                      {r.points.map((p) => (
+                        <li key={p} className="flex gap-2">
+                          <span aria-hidden className="font-catalog-mono text-accent-foreground/70">
+                            ·
+                          </span>
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </article>
               ))}
             </div>
@@ -386,25 +413,35 @@ function Landing() {
         </section>
 
         {/* Closing CTA */}
-        <section className="bg-primary px-6 py-20 text-center md:py-28">
-          <h2 className="font-catalog-serif mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-primary-foreground sm:text-4xl">
-            Your library deserves a catalog card.
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-primary-foreground/70">
-            Free to start. Built for ministers, pastors, theological students, and the schools that
-            train them.
-          </p>
-          <div className="mt-8">
-            <Button
-              asChild
-              size="lg"
-              className="font-catalog-mono border-2 border-accent bg-accent px-8 text-accent-foreground hover:bg-accent/90"
-            >
-              <Link to="/auth" search={{ mode: "signup" }}>
-                Request your card
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
+        <section className="relative overflow-hidden bg-primary px-6 py-20 text-center md:py-28">
+          <img
+            src="/cta-catalogue-band.webp"
+            alt=""
+            aria-hidden
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover opacity-40"
+          />
+          <div aria-hidden className="absolute inset-0 bg-primary/70" />
+          <div className="relative">
+            <h2 className="font-catalog-serif mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-primary-foreground sm:text-4xl">
+              Your library deserves a catalog card.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-primary-foreground/70">
+              Free to start. Built for ministers, pastors, theological students, and the schools
+              that train them.
+            </p>
+            <div className="mt-8">
+              <Button
+                asChild
+                size="lg"
+                className="font-catalog-mono border-2 border-accent bg-accent px-8 text-accent-foreground hover:bg-accent/90"
+              >
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  Request your card
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </section>
       </main>
