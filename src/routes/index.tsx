@@ -48,6 +48,8 @@ const READERS = [
   {
     code: "TS",
     title: "Theological students",
+    image: "/role-students.webp",
+    alt: "A closed notebook, a pencil and a stack of blank index cards on a navy desk.",
     body: "Your reading goals and the books you have on loan, kept in one place. Build discipline through a full semester, one stamp at a time.",
     points: [
       "Reading goals and progress",
@@ -58,6 +60,8 @@ const READERS = [
   {
     code: "IN",
     title: "Seminaries and schools",
+    image: "/role-institutions.webp",
+    alt: "A seminary corridor lined with navy oak card catalogue drawers and brass label holders.",
     body: "One institutional library for your campus, with multi-user access for staff and students. Your account is approved first, then the institution dashboard opens.",
     points: [
       "A shared institutional library",
@@ -362,23 +366,35 @@ function Landing() {
               {READERS.map((r) => (
                 <article
                   key={r.code}
-                  className="flex flex-col rounded-sm border border-border bg-card p-6 shadow-sm"
+                  className="flex flex-col overflow-hidden rounded-sm border border-border bg-card shadow-sm"
                 >
-                  <span className="font-catalog-mono inline-block w-fit rounded-sm bg-primary px-2 py-0.5 text-xs font-bold tracking-widest text-primary-foreground">
-                    {r.code}
-                  </span>
-                  <h3 className="font-catalog-serif mt-4 text-xl font-semibold">{r.title}</h3>
-                  <p className="mt-3 text-sm text-muted-foreground">{r.body}</p>
-                  <ul className="mt-5 space-y-2 border-t border-border/70 pt-4 text-sm">
-                    {r.points.map((p) => (
-                      <li key={p} className="flex gap-2">
-                        <span aria-hidden className="font-catalog-mono text-accent-foreground/70">
-                          ·
-                        </span>
-                        {p}
-                      </li>
-                    ))}
-                  </ul>
+                  {r.image && (
+                    <img
+                      src={r.image}
+                      alt={r.alt}
+                      loading="lazy"
+                      width={960}
+                      height={720}
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                  )}
+                  <div className="flex flex-1 flex-col p-6">
+                    <span className="font-catalog-mono inline-block w-fit rounded-sm bg-primary px-2 py-0.5 text-xs font-bold tracking-widest text-primary-foreground">
+                      {r.code}
+                    </span>
+                    <h3 className="font-catalog-serif mt-4 text-xl font-semibold">{r.title}</h3>
+                    <p className="mt-3 text-sm text-muted-foreground">{r.body}</p>
+                    <ul className="mt-5 space-y-2 border-t border-border/70 pt-4 text-sm">
+                      {r.points.map((p) => (
+                        <li key={p} className="flex gap-2">
+                          <span aria-hidden className="font-catalog-mono text-accent-foreground/70">
+                            ·
+                          </span>
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </article>
               ))}
             </div>
