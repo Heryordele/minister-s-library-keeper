@@ -336,6 +336,15 @@ function Landing() {
               })}
             </div>
             <div className="order-1 max-w-md lg:order-2">
+              <img
+                src="/reading-stamps.webp"
+                alt=""
+                aria-hidden
+                loading="lazy"
+                width={960}
+                height={720}
+                className="mb-6 aspect-[4/3] w-full rounded-sm border border-border object-cover"
+              />
               <h2 className="font-catalog-serif text-3xl font-semibold tracking-tight sm:text-4xl">
                 Reading, stamped and renewed.
               </h2>
