@@ -96,7 +96,7 @@ function Landing() {
 
       <main>
         {/* First viewport — the master catalog card, pulled from a drawer of them */}
-        <section className="relative overflow-hidden bg-primary px-6 pb-16 pt-10 md:pb-20 md:pt-14">
+        <section className="relative overflow-hidden bg-primary px-6 pb-16 pt-8 md:pb-16 md:pt-10">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 opacity-[0.05]"
@@ -112,6 +112,15 @@ function Landing() {
           />
 
           <div className="relative mx-auto max-w-4xl pt-6">
+            {/* The drawer the master card comes from */}
+            <img
+              src="/hero-catalogue.webp"
+              alt="An open oak card catalogue drawer with brass label holders and blank index cards."
+              width={1600}
+              height={892}
+              fetchPriority="high"
+              className="relative z-10 mb-3 h-32 w-full rounded-sm border border-border object-cover object-[center_60%] md:h-24"
+            />
             {/* Ghost cards — a drawer full, not one slip alone */}
             <div
               aria-hidden
@@ -124,7 +133,7 @@ function Landing() {
               style={{ height: "calc(100% - 12px)" }}
             />
 
-            <div className="mv-card-reveal relative rounded-sm border border-border bg-card px-7 py-9 shadow-[0_32px_80px_-16px_rgba(0,0,0,0.65)] sm:px-12 sm:py-12">
+            <div className="mv-card-reveal relative rounded-sm border border-border bg-card px-7 py-9 shadow-[0_32px_80px_-16px_rgba(0,0,0,0.65)] sm:px-12 sm:py-9">
               <div
                 aria-hidden
                 className="absolute left-6 top-6 h-2.5 w-2.5 rounded-full border border-border bg-background sm:left-8"
@@ -140,7 +149,7 @@ function Landing() {
                 </span>
               </div>
 
-              <h1 className="font-catalog-serif mt-7 pl-6 text-5xl font-semibold leading-[1.03] tracking-tight sm:pl-8 sm:text-6xl md:text-7xl">
+              <h1 className="font-catalog-serif mt-5 pl-6 text-5xl font-semibold leading-[1.03] tracking-tight sm:pl-8 sm:text-6xl md:text-7xl">
                 Preserving Knowledge.
                 <br />
                 <span className="text-accent-foreground/90">Building Discipline.</span>
@@ -148,7 +157,7 @@ function Landing() {
                 Protecting Legacy.
               </h1>
 
-              <ol className="mt-8 space-y-2 border-t border-border/70 pl-6 pt-6 text-base text-muted-foreground sm:pl-8">
+              <ol className="mt-6 space-y-2 border-t border-border/70 pl-6 pt-5 text-base text-muted-foreground sm:pl-8">
                 <li>
                   <span className="font-catalog-mono mr-2 text-accent-foreground/70">1.</span>
                   Cataloging — organized by a classification built for ministry, not generic tags.
@@ -163,7 +172,7 @@ function Landing() {
                 </li>
               </ol>
 
-              <div className="mt-9 flex flex-wrap items-center gap-4 border-t border-border/70 pl-6 pt-7 sm:pl-8">
+              <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-border/70 pl-6 pt-6 sm:pl-8">
                 <Button
                   asChild
                   size="lg"
