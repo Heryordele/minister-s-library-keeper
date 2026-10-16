@@ -9,7 +9,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "A cloud library and reading accountability platform for ministers, pastors, and theological students.",
+          "A cloud library and reading accountability platform for ministers, pastors, theological students, and the seminaries and schools that train them.",
       },
     ],
     links: [
@@ -31,6 +31,40 @@ const TAXONOMY = [
   { code: "ME", label: "Missions & Evangelism", note: "Evangelism · Church Planting" },
   { code: "PD", label: "Personal Development", note: "Leadership · Finance · Productivity" },
   { code: "BH", label: "Biography & History", note: "Church History · Missionary Lives" },
+];
+
+// One card per role the product signs people up for (see onboarding/role-select).
+const READERS = [
+  {
+    code: "MN",
+    title: "Ministers and pastors",
+    body: "A personal library for the books you preach from and the books you lend out. Catalog every volume and keep a reading habit that carries through a busy week.",
+    points: [
+      "Cataloging by classification",
+      "Lending reminders before a book is forgotten",
+      "A reading streak that survives busy weeks",
+    ],
+  },
+  {
+    code: "TS",
+    title: "Theological students",
+    body: "Your reading goals and the books you have on loan, kept in one place. Build discipline through a full semester, one stamp at a time.",
+    points: [
+      "Reading goals and progress",
+      "Your loans and due dates",
+      "Discipline across the whole term",
+    ],
+  },
+  {
+    code: "IN",
+    title: "Seminaries and schools",
+    body: "One institutional library for your campus, with multi-user access for staff and students. Your account is approved first, then the institution dashboard opens.",
+    points: [
+      "A shared institutional library",
+      "Multi-user access",
+      "Reviewed by the Minister's Vault team before activation",
+    ],
+  },
 ];
 
 const LOANS = [
@@ -310,13 +344,55 @@ function Landing() {
           </div>
         </section>
 
+        {/* Who it's for — one card per role */}
+        <section className="border-t border-border bg-secondary/40 px-6 py-20 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <div className="max-w-2xl">
+              <h2 className="font-catalog-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+                Made for the minister, the student, and the school.
+              </h2>
+              <p className="mt-4 max-w-[65ch] text-muted-foreground">
+                Each reader gets the same catalog with the parts that matter to them. Ministers keep
+                a personal library, students keep their reading on track, and seminaries run one
+                shared library for everyone on campus.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              {READERS.map((r) => (
+                <article
+                  key={r.code}
+                  className="flex flex-col rounded-sm border border-border bg-card p-6 shadow-sm"
+                >
+                  <span className="font-catalog-mono inline-block w-fit rounded-sm bg-primary px-2 py-0.5 text-xs font-bold tracking-widest text-primary-foreground">
+                    {r.code}
+                  </span>
+                  <h3 className="font-catalog-serif mt-4 text-xl font-semibold">{r.title}</h3>
+                  <p className="mt-3 text-sm text-muted-foreground">{r.body}</p>
+                  <ul className="mt-5 space-y-2 border-t border-border/70 pt-4 text-sm">
+                    {r.points.map((p) => (
+                      <li key={p} className="flex gap-2">
+                        <span aria-hidden className="font-catalog-mono text-accent-foreground/70">
+                          ·
+                        </span>
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Closing CTA */}
         <section className="bg-primary px-6 py-20 text-center md:py-28">
           <h2 className="font-catalog-serif mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-primary-foreground sm:text-4xl">
             Your library deserves a catalog card.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-primary-foreground/70">
-            Free to start. Built for ministers, pastors, and theological students.
+            Free to start. Built for ministers, pastors, theological students, and the schools that
+            train them.
           </p>
           <div className="mt-8">
             <Button
