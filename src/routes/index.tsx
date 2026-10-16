@@ -38,6 +38,8 @@ const READERS = [
   {
     code: "MN",
     title: "Ministers and pastors",
+    image: "/role-ministers.webp",
+    alt: "Hardcover theology books standing on a navy oak shelf beside a brass bookend.",
     body: "A personal library for the books you preach from and the books you lend out. Catalog every volume and keep a reading habit that carries through a busy week.",
     points: [
       "Cataloging by classification",
