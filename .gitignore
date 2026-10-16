@@ -37,3 +37,6 @@ dist-ssr
 
 # Supabase CLI local state
 supabase/.temp/
+
+# AI-generated media (Higgsfield); commit only if deliberately chosen
+media-src/
